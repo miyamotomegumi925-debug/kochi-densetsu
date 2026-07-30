@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>管理画面｜コウチの伝説</title>
+  <link rel="stylesheet" href="./src/styles.css">
+  <link rel="stylesheet" href="./src/admin.css">
+</head>
+<body class="admin-body">
+  <main class="admin-shell">
+    <header class="admin-header"><div><small>LEGEND MASTER CONSOLE</small><h1>コウチの伝説 管理画面</h1></div><a href="./">← サイトへ戻る</a></header>
+    <section id="login-panel" class="admin-panel login-panel">
+      <h2>▶ 管理者ログイン</h2>
+      <form id="admin-login"><label>メールアドレス<input name="email" type="email" required></label><label>パスワード<input name="password" type="password" required></label><p id="login-error" class="admin-error"></p><button>ログイン</button></form>
+    </section>
+    <section id="dashboard" hidden>
+      <div class="admin-stats"><article><small>未確認</small><strong id="pending-count">0</strong></article><article><small>公開中</small><strong id="approved-count">0</strong></article><article><small>図鑑</small><strong id="legend-count">0</strong></article><button id="logout">ログアウト</button></div>
+      <div class="admin-tabs"><button data-tab="submissions" class="active">投稿管理</button><button data-tab="legends">伝説図鑑</button><button data-tab="featured">トップ掲載</button><button data-tab="seasonal">SEASONAL</button></div>
+      <section id="tab-submissions" class="admin-tab"><div class="admin-section-head"><h2>冒険者の投稿</h2><select id="submission-filter"><option value="all">すべて</option><option value="pending">未確認</option><option value="approved">公開中</option><option value="rejected">非公開</option></select></div><div id="admin-submissions" class="admin-list"></div></section>
+      <section id="tab-legends" class="admin-tab" hidden><div class="admin-section-head"><h2>伝説図鑑</h2></div><form id="legend-form" class="legend-form"><input name="title" required placeholder="伝説のタイトル"><div><input name="legend_no" placeholder="伝説番号（例：037）"><select name="category" required><option value="">カテゴリー</option><option>食</option><option>酒</option><option>職人</option><option>神社</option><option>祭り</option><option>絶景</option><option>自然</option><option>人</option></select><select name="area" required><option value="">エリア</option><option>東部</option><option>中央部</option><option>西部</option><option>四万十</option></select></div><div><select name="season"><option value="">通年</option><option>春</option><option>夏</option><option>秋</option><option>冬</option></select><input name="latitude" type="number" step="any" placeholder="緯度（例：33.5597）"><input name="longitude" type="number" step="any" placeholder="経度（例：133.5311）"></div><input name="place" required placeholder="場所"><textarea name="summary" required maxlength="240" rows="3" placeholder="伝説の紹介"></textarea><textarea name="why" rows="2" placeholder="なぜ伝説なのか（任意）"></textarea><textarea name="access" rows="2" placeholder="どうやって会えるか（任意）"></textarea><input name="detail_url" placeholder="詳細ページURL（任意）"><input name="youtube" type="url" placeholder="YouTube URL（任意）"><label class="inline-label">公開状態<select name="status"><option value="draft">下書き</option><option value="published">公開</option></select></label><button type="submit">▶ 図鑑に登録</button><p id="legend-status"></p></form><div id="admin-legends" class="admin-list"></div></section>
+      <section id="tab-featured" class="admin-tab" hidden><div class="admin-section-head"><h2>トップページ掲載設定</h2></div><form id="featured-form" class="settings-form"><label>今日の伝説<select name="today_legend_id" id="today-legend-select"><option value="">選択してください</option></select></label><fieldset><legend>新しい伝説（最大3件）</legend><div id="new-legend-options" class="check-list"></div></fieldset><button type="submit">▶ トップ掲載を保存</button><p id="featured-status"></p></form></section>
+      <section id="tab-seasonal" class="admin-tab" hidden><div class="admin-section-head"><h2>SEASONAL設定</h2></div><form id="seasonal-form" class="settings-form"><div class="form-grid"><label>季節<select name="season"><option>春</option><option selected>夏</option><option>秋</option><option>冬</option></select></label><label>英語表記<input name="label" value="SUMMER"></label></div><label>見出し<input name="title" required placeholder="夏は、一瞬で過ぎてゆく。"></label><label>紹介文<textarea name="description" rows="3" required></textarea></label><label>リンク先<input name="link" placeholder="#zukan"></label><label class="toggle-label"><input name="enabled" type="checkbox" checked> 公開する</label><button type="submit">▶ SEASONALを保存</button><p id="seasonal-status"></p></form></section>
+    </section>
+  </main>
+  <script type="module" src="./src/admin.js?v=20260730-3"></script>
+</body>
+</html>
