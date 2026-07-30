@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>管理画面｜コウチの伝説</title>
+  <link rel="stylesheet" href="./src/styles.css">
+  <link rel="stylesheet" href="./src/admin.css">
+</head>
+<body class="admin-body">
+  <main class="admin-shell">
+    <header class="admin-header"><div><small>LEGEND MASTER CONSOLE</small><h1>コウチの伝説 管理画面</h1></div><a href="./">← サイトへ戻る</a></header>
+    <section id="login-panel" class="admin-panel login-panel">
+      <h2>▶ 管理者ログイン</h2>
+      <form id="admin-login"><label>メールアドレス<input name="email" type="email" required></label><label>パスワード<input name="password" type="password" required></label><p id="login-error" class="admin-error"></p><button>ログイン</button></form>
+    </section>
+    <section id="dashboard" hidden>
+      <div class="admin-stats"><article><small>未確認</small><strong id="pending-count">0</strong></article><article><small>公開中</small><strong id="approved-count">0</strong></article><article><small>図鑑</small><strong id="legend-count">0</strong></article><button id="logout">ログアウト</button></div>
+      <div class="admin-tabs"><button data-tab="submissions" class="active">投稿管理</button><button data-tab="legends">伝説図鑑</button></div>
+      <section id="tab-submissions" class="admin-tab"><div class="admin-section-head"><h2>冒険者の投稿</h2><select id="submission-filter"><option value="all">すべて</option><option value="pending">未確認</option><option value="approved">公開中</option><option value="rejected">非公開</option></select></div><div id="admin-submissions" class="admin-list"></div></section>
+      <section id="tab-legends" class="admin-tab" hidden><div class="admin-section-head"><h2>伝説図鑑</h2></div><form id="legend-form" class="legend-form"><input name="title" required placeholder="伝説のタイトル"><div><select name="category" required><option value="">カテゴリー</option><option>食</option><option>酒</option><option>職人</option><option>神社</option><option>祭り</option><option>絶景</option><option>自然</option><option>人</option></select><select name="area" required><option value="">エリア</option><option>東部</option><option>中央部</option><option>西部</option><option>四万十</option></select><select name="season"><option value="">通年</option><option>春</option><option>夏</option><option>秋</option><option>冬</option></select></div><input name="place" required placeholder="場所"><textarea name="summary" required maxlength="240" rows="3" placeholder="伝説の紹介"></textarea><input name="youtube" type="url" placeholder="YouTube URL（任意）"><label class="inline-label">公開状態<select name="status"><option value="draft">下書き</option><option value="published">公開</option></select></label><button type="submit">▶ 図鑑に登録</button><p id="legend-status"></p></form><div id="admin-legends" class="admin-list"></div></section>
+    </section>
+  </main>
+  <script type="module" src="./src/admin.js"></script>
+</body>
+</html>
