@@ -1,3 +1,6 @@
+Exit code: 0
+Wall time: 6.1 seconds
+Output:
 import { dbSelect, dbInsert, uploadSubmissionImage } from './supabase.js?v=20260801-1';
 
 function ensureHeroIntroduction() {
@@ -35,6 +38,18 @@ function getAdventurerLevel(discoveredCount) {
   return { level:1, title:'かけだし冒険者' };
 }
 
+function getNextLevelProgress(discoveredCount) {
+  const current = getAdventurerLevel(discoveredCount);
+  const nextSteps = [
+    { level:2, threshold:3, title:'みならい語り部' },
+    { level:3, threshold:6, title:'伝説の探索者' },
+    { level:4, threshold:10, title:'土佐の語り部' },
+    { level:5, threshold:20, title:'伝説の継承者' }
+  ];
+  const next = nextSteps.find(step => step.level === current.level + 1);
+  return next ? { currentLevel:current.level, nextLevel:next.level, remaining:Math.max(0,next.threshold-discoveredCount), nextTitle:next.title, max:false } : { currentLevel:current.level, nextLevel:null, remaining:0, nextTitle:null, max:true };
+}
+
 const normalizeProgress = source => {
   if (Array.isArray(source)) source = { discoveredLegends:source };
   if (!source || typeof source !== 'object') return emptyProgress();
@@ -66,7 +81,12 @@ const updateDiscoveredControls = () => {
   document.querySelectorAll('[data-discover-legend]').forEach(control => {
     const discovered = playerProgress.discoveredLegends.includes(control.dataset.discoverLegend);
     control.classList.toggle('is-discovered', discovered);
-    if (discovered) {
+    if (control.matches('[data-discover-card]')) {
+      const status = control.querySelector('.discovery-status');
+      if (status) status.hidden = !discovered;
+      control.dataset.defaultLabel ||= control.getAttribute('aria-label') || '伝説を開く';
+      control.setAttribute('aria-label', `${control.dataset.defaultLabel}${discovered ? '（発見済み）' : ''}`);
+    } else if (discovered) {
       control.textContent = '発見済み ✓';
       control.setAttribute('aria-label', `${control.dataset.discoverLegend}の伝説は発見済みです`);
     }
@@ -80,6 +100,8 @@ const renderProgress = () => {
   document.querySelector('#player-legend-count').textContent = String(playerProgress.discoveredLegends.length).padStart(3,'0');
   document.querySelector('#player-area-count').textContent = String(playerProgress.discoveredAreas.length).padStart(2,'0');
   document.querySelector('#zukan-progress-count').textContent = String(playerProgress.discoveredLegends.length).padStart(3,'0');
+  const next = getNextLevelProgress(playerProgress.discoveredLegends.length);
+  document.querySelector('#next-level-progress').textContent = next.max ? 'MAX LEVEL / すべての称号を獲得' : `次のレベルまで あと${next.remaining}つ`;
   updateDiscoveredControls();
 };
 const discoverLegend = (legendId, area) => {
@@ -91,7 +113,7 @@ const discoverLegend = (legendId, area) => {
   const currentLevel = getAdventurerLevel(playerProgress.discoveredLegends.length);
   saveProgress();
   renderProgress();
-  showProgressMessage(currentLevel.level > previousLevel ? `LEVEL UP！ ${currentLevel.title}になった` : `伝説を ${playerProgress.discoveredLegends.length}つ 発見した！`);
+  showProgressMessage(currentLevel.level > previousLevel ? `LEVEL UP！\n${currentLevel.title}になった` : `伝説を ${playerProgress.discoveredLegends.length}つ 発見した！`);
   return true;
 };
 
@@ -209,6 +231,34 @@ document.querySelector('#today-feature-card').addEventListener('click', event =>
   discoverLegend(control.dataset.discoverLegend, control.dataset.discoverArea);
 });
 
+const legendPreviewDialog = document.querySelector('#legend-preview-dialog');
+const featuredLegendGrid = document.querySelector('#featured-legend-grid');
+let lastPreviewTrigger;
+const openLegendPreview = card => {
+  const meta = card.querySelectorAll('.meta span');
+  document.querySelector('#legend-preview-category').textContent = meta[0]?.textContent || '伝説';
+  document.querySelector('#legend-preview-place').textContent = meta[1]?.textContent || '';
+  document.querySelector('#legend-preview-title').textContent = card.querySelector('h3')?.textContent || '';
+  document.querySelector('#legend-preview-summary').textContent = card.querySelector('.legend-content>p')?.textContent || '';
+  discoverLegend(card.dataset.discoverLegend, card.dataset.discoverArea);
+  lastPreviewTrigger = card;
+  legendPreviewDialog.showModal();
+};
+featuredLegendGrid.addEventListener('click', event => {
+  const card = event.target.closest('[data-discover-card]');
+  if (card) openLegendPreview(card);
+});
+featuredLegendGrid.addEventListener('keydown', event => {
+  const card = event.target.closest('[data-discover-card]');
+  if (card && ['Enter',' '].includes(event.key)) {
+    event.preventDefault();
+    openLegendPreview(card);
+  }
+});
+document.querySelector('#close-legend-preview').addEventListener('click', () => legendPreviewDialog.close());
+legendPreviewDialog.addEventListener('click', event => { if (event.target === legendPreviewDialog) legendPreviewDialog.close(); });
+legendPreviewDialog.addEventListener('close', () => lastPreviewTrigger?.focus());
+
 const dialog = document.querySelector('#post-dialog');
 const postForm = document.querySelector('#post-form');
 const communityGrid = document.querySelector('#community-grid');
@@ -304,10 +354,13 @@ function setupCategoryLinks() {
   });
 }
 
-const legendCardHtml = legend => `<article class="legend-card paper"><div class="legend-visual">${legend.image_url ? `<img src="${escapeHtml(legend.image_url)}" alt="${escapeHtml(legend.title)}">` : `<b>${escapeHtml(legend.category?.slice(0,1) || '伝')}</b>`}<span>LEGEND<br>No.${escapeHtml(legend.legend_no || '---')}</span></div><div class="legend-content"><div class="meta"><span>${escapeHtml(legend.category)}</span><span>📍 ${escapeHtml(legend.place)}</span></div><h3>${escapeHtml(legend.title)}</h3><p>${escapeHtml(legend.summary)}</p><span class="card-arrow">→</span></div></article>`;
 const getLegendProgressId = legend => {
   const raw = String(legend?.legend_no || legend?.id || '').trim();
   return /^\d+$/.test(raw) ? raw.padStart(3,'0') : raw;
+};
+const legendCardHtml = legend => {
+  const progressId = `legend-new-${getLegendProgressId(legend)}`;
+  return `<article class="legend-card paper discoverable-card" role="button" tabindex="0" data-discover-card data-discover-legend="${escapeHtml(progressId)}" data-discover-area="${escapeHtml(legend.area || '')}" aria-label="${escapeHtml(legend.title)}を開く"><div class="legend-visual">${legend.image_url ? `<img src="${escapeHtml(legend.image_url)}" alt="${escapeHtml(legend.title)}">` : `<b>${escapeHtml(legend.category?.slice(0,1) || '伝')}</b>`}<span>LEGEND<br>No.${escapeHtml(legend.legend_no || '---')}</span></div><div class="legend-content"><div class="meta"><span>${escapeHtml(legend.category)}</span><span>📍 ${escapeHtml(legend.place)}</span></div><h3>${escapeHtml(legend.title)}</h3><p>${escapeHtml(legend.summary)}</p><span class="discovery-status" hidden>発見済み ✓</span><span class="card-arrow">→</span></div></article>`;
 };
 function applyHomeSettings(settings, publishedLegends) {
   const featured = settings.home_featured || {};
@@ -320,7 +373,13 @@ function applyHomeSettings(settings, publishedLegends) {
     updateDiscoveredControls();
   }
   const newLegends = (featured.new_legend_ids || []).map(id => publishedLegends.find(x => x.id === id)).filter(Boolean);
-  if (newLegends.length) document.querySelector('#featured-legend-grid').innerHTML = newLegends.map(legendCardHtml).join('');
+  if (newLegends.length) {
+    const grid = document.querySelector('#featured-legend-grid');
+    const existingIds = new Set([...grid.querySelectorAll('[data-discover-legend]')].map(card => card.dataset.discoverLegend));
+    const additionalLegends = newLegends.filter(legend => !existingIds.has(`legend-new-${getLegendProgressId(legend)}`));
+    grid.insertAdjacentHTML('beforeend', additionalLegends.map(legendCardHtml).join(''));
+    updateDiscoveredControls();
+  }
   const seasonal = settings.seasonal;
   if (seasonal) {
     document.querySelector('#season').hidden = seasonal.enabled === false;
@@ -388,3 +447,4 @@ document.querySelectorAll('[data-area]').forEach(button => button.addEventListen
 }));
 
 loadPublicData();
+
