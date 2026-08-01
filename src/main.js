@@ -474,4 +474,8 @@ postForm.addEventListener('submit', async event => {
 document.querySelectorAll('[data-area]').forEach(button => button.addEventListener('click', () => {
   document.querySelectorAll('[data-area]').forEach(item => item.classList.remove('active'));
   button.classList.add('active');
-  document.querySelector('#are
+  document.querySelector('#area-label').textContent = button.dataset.area;
+  document.dispatchEvent(new CustomEvent('kochi-area-change', { detail:{ area:button.dataset.area } }));
+}));
+
+loadPublicData();
