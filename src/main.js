@@ -116,9 +116,13 @@ const renderProgress = () => {
   document.querySelector('#next-level-progress').textContent = next.max ? 'MAX LEVEL / すべての称号を獲得' : `次のレベルまで あと${next.remaining}つ`;
   updateDiscoveredControls();
 };
-const discoverLegend = (legendId, area, title) => {
+const discoverLegend = (legendId, area, title, { showGlobalNotice = true } = {}) => {
   const id = String(legendId || '').trim();
-  if (!id || playerProgress.discoveredLegends.includes(id)) { updateDiscoveredControls(); return false; }
+  const currentStatus = getAdventurerLevel(playerProgress.discoveredLegends.length);
+  if (!id || playerProgress.discoveredLegends.includes(id)) {
+    updateDiscoveredControls();
+    return { isNew:false, didLevelUp:false, level:currentStatus.level, title:currentStatus.title };
+  }
   const previousLevel = getAdventurerLevel(playerProgress.discoveredLegends.length).level;
   playerProgress.discoveredLegends.push(id);
   if (VALID_AREAS.includes(area) && !playerProgress.discoveredAreas.includes(area)) playerProgress.discoveredAreas.push(area);
@@ -126,8 +130,9 @@ const discoverLegend = (legendId, area, title) => {
   saveProgress();
   renderProgress();
   const discoveryNotice = `LEGEND DISCOVERED！\n「${String(title || '新しい伝説').trim()}」を発見した`;
-  showProgressMessage(currentLevel.level > previousLevel ? `${discoveryNotice}\nLEVEL UP！ ${currentLevel.title}になった` : discoveryNotice);
-  return true;
+  const didLevelUp = currentLevel.level > previousLevel;
+  if (showGlobalNotice) showProgressMessage(didLevelUp ? `${discoveryNotice}\nLEVEL UP！ ${currentLevel.title}になった` : discoveryNotice);
+  return { isNew:true, didLevelUp, level:currentLevel.level, title:currentLevel.title };
 };
 
 renderProgress();
@@ -240,6 +245,10 @@ document.querySelectorAll('[data-go]:not(.primary)').forEach(button => button.ad
 
 const legendPreviewDialog = document.querySelector('#legend-preview-dialog');
 const featuredLegendGrid = document.querySelector('#featured-legend-grid');
+const dialogDiscoveryBanner = document.querySelector('#dialog-discovery-banner');
+const dialogDiscoveryTitle = document.querySelector('#dialog-discovery-title');
+const dialogDiscoveryMessage = document.querySelector('#dialog-discovery-message');
+const dialogLevelUp = document.querySelector('#dialog-level-up');
 let lastPreviewTrigger;
 const openLegendPreview = (card, trigger) => {
   const meta = card.querySelectorAll('.meta span');
@@ -249,9 +258,19 @@ const openLegendPreview = (card, trigger) => {
   document.querySelector('#legend-preview-summary').textContent = card.querySelector('.legend-content>p, .feature-body>p')?.textContent || '';
   const legendId = trigger.dataset.discoverLegend || card.dataset.discoverLegend;
   const area = trigger.dataset.discoverArea || card.dataset.discoverArea;
-  discoverLegend(legendId, area, card.querySelector('h3')?.textContent);
+  const discoveryResult = discoverLegend(legendId, area, card.querySelector('h3')?.textContent, { showGlobalNotice:false });
+  window.clearTimeout(progressMessageTimer);
+  progressMessage.classList.remove('show');
+  dialogDiscoveryBanner.hidden = false;
+  dialogDiscoveryBanner.classList.toggle('is-new', discoveryResult.isNew);
+  dialogDiscoveryBanner.classList.toggle('is-existing', !discoveryResult.isNew);
+  dialogDiscoveryTitle.textContent = discoveryResult.isNew ? 'LEGEND DISCOVERED！' : 'DISCOVERED ✓';
+  dialogDiscoveryMessage.textContent = discoveryResult.isNew ? '新しい伝説を発見しました' : '発見済み';
+  dialogLevelUp.hidden = !discoveryResult.didLevelUp;
+  dialogLevelUp.textContent = discoveryResult.didLevelUp ? `LEVEL UP！\n${discoveryResult.title}になった` : '';
   lastPreviewTrigger = trigger;
   legendPreviewDialog.showModal();
+  legendPreviewDialog.scrollTop = 0;
 };
 featuredLegendGrid.addEventListener('click', event => {
   const action = event.target.closest('[data-discover-action]');
@@ -264,6 +283,12 @@ document.querySelector('#today-feature-card').addEventListener('click', event =>
 });
 document.querySelector('#close-legend-preview').addEventListener('click', () => legendPreviewDialog.close());
 legendPreviewDialog.addEventListener('click', event => { if (event.target === legendPreviewDialog) legendPreviewDialog.close(); });
+legendPreviewDialog.addEventListener('keydown', event => {
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    legendPreviewDialog.close();
+  }
+});
 legendPreviewDialog.addEventListener('close', () => lastPreviewTrigger?.focus());
 
 const dialog = document.querySelector('#post-dialog');
@@ -449,8 +474,4 @@ postForm.addEventListener('submit', async event => {
 document.querySelectorAll('[data-area]').forEach(button => button.addEventListener('click', () => {
   document.querySelectorAll('[data-area]').forEach(item => item.classList.remove('active'));
   button.classList.add('active');
-  document.querySelector('#area-label').textContent = button.dataset.area;
-  document.dispatchEvent(new CustomEvent('kochi-area-change', { detail:{ area:button.dataset.area } }));
-}));
-
-loadPublicData();
+  document.querySelector('#are
