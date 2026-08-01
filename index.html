@@ -12,7 +12,7 @@
   <meta property="og:description" content="観光地ではなく、人に語りたくなる高知の伝説を探す冒険メディア。">
   <meta property="og:image" content="./kochi-title-screen.png"><meta name="twitter:card" content="summary_large_image">
   <title>コウチの伝説｜まだ、誰も知らない高知に出会う。</title>
-  <link rel="stylesheet" href="./src/styles.css?v=20260801-13">
+  <link rel="stylesheet" href="./src/styles.css?v=20260801-14">
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"コウチの伝説","description":"高知に眠る人・文化・食・風景・祭りを紹介する冒険メディア","inLanguage":"ja","about":{"@type":"Place","name":"高知県"}}</script>
 </head>
 <body>
@@ -94,7 +94,7 @@
 
     <section id="join" class="join section" aria-labelledby="join-title"><div class="join-mark"><b>✦</b><span>いいもの<br>ファンクラブ</span></div><p class="eyebrow dark">JOIN THE QUEST</p><h2 id="join-title">あなたの「誰かに教えたい」を、<br>次の伝説に。</h2><p>有名じゃなくていい。ランキングも、点数もない。<br>あなたの心に残った高知を、私たちに教えてください。</p><button id="join-btn">▶ 伝説を投稿する</button></section>
 
-    <dialog id="legend-preview-dialog" class="legend-preview-dialog" aria-labelledby="legend-preview-title"><div class="legend-preview-head"><small>LEGEND RESEARCH LOG</small><button id="close-legend-preview" type="button" aria-label="伝説の案内を閉じる">×</button></div><div class="meta"><span id="legend-preview-category"></span><span id="legend-preview-place"></span></div><h2 id="legend-preview-title"></h2><p id="legend-preview-summary"></p><p class="research-note">▶ この伝説は現在調査中です</p></dialog>
+    <dialog id="legend-preview-dialog" class="legend-preview-dialog" aria-labelledby="legend-preview-title"><div class="legend-preview-head"><small>LEGEND RESEARCH LOG</small><button id="close-legend-preview" type="button" aria-label="伝説の案内を閉じる">×</button></div><div id="dialog-discovery-banner" class="dialog-discovery-banner" role="status" aria-live="polite" aria-atomic="true" hidden><strong id="dialog-discovery-title"></strong><span id="dialog-discovery-message"></span><span id="dialog-level-up" class="dialog-level-up" hidden></span></div><div class="meta"><span id="legend-preview-category"></span><span id="legend-preview-place"></span></div><h2 id="legend-preview-title"></h2><p id="legend-preview-summary"></p><p class="research-note">▶ この伝説は現在調査中です</p></dialog>
 
     <dialog id="post-dialog" class="post-dialog"><form id="post-form"><div class="dialog-head"><div><small>NEW QUEST</small><h2>伝説を記録する</h2></div><button type="button" id="close-dialog" aria-label="閉じる">×</button></div><p class="dialog-note">あなたが誰かに語りたくなる、高知の物語を教えてください。</p>
       <label><span>📍 場所</span><input name="place" required maxlength="40" placeholder="例：四万十市"></label><label><span>📖 伝説</span><input name="legend" required maxlength="60" placeholder="例：川の香りを運ぶ、春の青のり"></label><label><span>✨ なぜ伝説なのか</span><textarea name="why" required maxlength="240" rows="4" placeholder="心に残った理由や物語"></textarea></label><label><span>🎒 どうやって会えるか</span><textarea name="access" required maxlength="180" rows="3" placeholder="時期、行き方、会うためのヒント"></textarea></label><label><span>▶ YouTube動画（任意）</span><input name="youtube" type="url" inputmode="url" placeholder="https://youtu.be/..." aria-describedby="youtube-help"><small id="youtube-help" class="field-help">この伝説が分かる動画のURLを入力できます。</small></label><label><span>なまえ（任意）</span><input name="author" maxlength="30" placeholder="名もなき冒険者"></label><div class="form-status" id="form-status" aria-live="polite"></div><button class="submit-post" type="submit">▶ 冒険手帳に記録する</button><small class="save-note">投稿は管理者の確認後、みんなの伝説に公開されます。</small>
@@ -104,6 +104,6 @@
   <footer><div class="footer-brand"><span class="brand-mark">伝</span><div><b>コウチの伝説</b><small>まだ、誰も知らない高知に出会う。</small></div></div><p>高知で一番ワクワクする冒険メディアを目指して。</p><span>© 2026 LEGENDS OF KOCHI</span></footer>
   <noscript><div class="noscript-message">このページの物語はお読みいただけます。投稿、音声、メニュー、地図の切り替えなどの機能を使うにはJavaScriptを有効にしてください。</div></noscript>
   <div id="progress-message" class="progress-message" role="status" aria-live="polite" aria-atomic="true"></div>
-  <script type="module" src="./src/main.js?v=20260801-14"></script>
+  <script type="module" src="./src/main.js?v=20260801-15"></script>
 </body>
 </html>
