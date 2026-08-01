@@ -63,8 +63,58 @@ const playStartSound = async () => {
 };
 
 const startButton = document.querySelector('.primary');
-startButton.addEventListener('pointerdown', unlockAudio, { passive:true });
-document.querySelectorAll('[data-go]').forEach(button => button.addEventListener('click', async () => {
+const questOverlay = document.querySelector('.quest-start-overlay');
+const todaySection = document.querySelector('#today');
+const todayHeading = document.querySelector('#today-title');
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+let questStarting = false;
+let questTimers = [];
+
+todayHeading?.setAttribute('tabindex', '-1');
+const scheduleQuestStep = (callback, delay) => {
+  const timer = window.setTimeout(callback, delay);
+  questTimers.push(timer);
+  return timer;
+};
+const clearQuestTimers = () => {
+  questTimers.forEach(window.clearTimeout);
+  questTimers = [];
+};
+const scrollToSection = (id, behavior = 'smooth') => {
+  document.getElementById(id)?.scrollIntoView({ behavior, block:'start' });
+};
+const finishQuestStart = isReduced => {
+  questOverlay.classList.remove('quest-start-active');
+  questOverlay.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('game-starting');
+  scrollToSection('today', isReduced ? 'auto' : 'smooth');
+  todaySection.classList.add('quest-arrived');
+  scheduleQuestStep(() => todayHeading?.focus({ preventScroll:true }), isReduced ? 0 : 160);
+  scheduleQuestStep(() => todaySection.classList.remove('quest-arrived'), isReduced ? 180 : 850);
+  scheduleQuestStep(() => {
+    startButton.textContent = 'PRESS START';
+    startButton.disabled = false;
+    startButton.removeAttribute('aria-disabled');
+    questStarting = false;
+  }, isReduced ? 80 : 250);
+};
+const startQuest = () => {
+  if (questStarting) return;
+  questStarting = true;
+  clearQuestTimers();
+  startButton.disabled = true;
+  startButton.setAttribute('aria-disabled', 'true');
+  startButton.textContent = 'GAME START!';
+  document.body.classList.add('game-starting');
+  questOverlay.setAttribute('aria-hidden', 'false');
+  questOverlay.classList.add('quest-start-active');
+  playStartSound().catch(() => false);
+  scheduleQuestStep(() => finishQuestStart(reducedMotion.matches), reducedMotion.matches ? 180 : 1450);
+};
+
+startButton.addEventListener('pointerdown', () => { unlockAudio().catch(() => null); }, { passive:true });
+startButton.addEventListener('click', startQuest);
+document.querySelectorAll('[data-go]:not(.primary)').forEach(button => button.addEventListener('click', async () => {
   const isStart = button.classList.contains('primary');
   if (isStart) {
     const sounded = await playStartSound();
