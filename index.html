@@ -1,3 +1,6 @@
+Exit code: 0
+Wall time: 4.5 seconds
+Output:
 <!doctype html>
 <html lang="ja">
 <head>
@@ -12,7 +15,7 @@
   <meta property="og:description" content="観光地ではなく、人に語りたくなる高知の伝説を探す冒険メディア。">
   <meta property="og:image" content="./kochi-title-screen.png"><meta name="twitter:card" content="summary_large_image">
   <title>コウチの伝説｜まだ、誰も知らない高知に出会う。</title>
-  <link rel="stylesheet" href="./src/styles.css?v=20260801-10">
+  <link rel="stylesheet" href="./src/styles.css?v=20260801-11">
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"コウチの伝説","description":"高知に眠る人・文化・食・風景・祭りを紹介する冒険メディア","inLanguage":"ja","about":{"@type":"Place","name":"高知県"}}</script>
 </head>
 <body>
@@ -39,7 +42,7 @@
           <button type="button" data-go="join"><span aria-hidden="true">＋</span> 伝説を教える</button>
         </nav>
         <div class="hero-copy"><p>▶ ぼうけんの準備ができました</p><a class="primary" href="#today" data-go="today">PRESS START</a><small>♪ 音量をオンにしてタップ</small></div>
-        <div class="game-hud" aria-label="あなたの冒険者ステータス"><div class="level-box"><small>ADVENTURER LEVEL</small><strong><i>LV.</i><span id="player-level-number">01</span></strong><span id="player-level-title">かけだし冒険者</span></div><div class="status-box"><span><small>発見した伝説</small><b id="player-legend-count">000</b><i>/ 100</i></span><span><small>発見したエリア</small><b id="player-area-count">00</b><i>/ 04</i></span></div><div class="hp-box"><small>HP</small><b>♥ ♥ ♥</b><span>ぜんかい</span></div></div>
+        <div class="game-hud" aria-label="あなたの冒険者ステータス"><div class="level-box"><small>ADVENTURER LEVEL</small><strong><i>LV.</i><span id="player-level-number">01</span></strong><span id="player-level-title">かけだし冒険者</span><p id="next-level-progress" class="next-level-progress">次のレベルまで あと3つ</p></div><div class="status-box"><span><small>発見した伝説</small><b id="player-legend-count">000</b><i>/ 100</i></span><span><small>発見したエリア</small><b id="player-area-count">00</b><i>/ 04</i></span></div><div class="hp-box"><small>HP</small><b>♥ ♥ ♥</b><span>ぜんかい</span></div></div>
       </div>
     </header>
 
@@ -64,9 +67,9 @@
     <section class="latest section" aria-labelledby="latest-title">
       <div class="heading-row"><div><p class="eyebrow dark">NEW LEGENDS</p><h2 id="latest-title">あたらしい伝説</h2></div><button data-go="zukan">すべて見る →</button></div>
       <div id="featured-legend-grid" class="legend-grid">
-        <article class="legend-card sun"><div class="legend-visual"><b>◒</b><span>LEGEND<br>No.001</span></div><div class="legend-content"><div class="meta"><span>食</span><span>📍 黒潮町</span></div><h3>潮風が育てる、幻の黒糖。</h3><p>火入れは一年に、ほんの数日。</p><span class="card-arrow">→</span></div></article>
-        <article class="legend-card night"><div class="legend-visual"><b>火</b><span>LEGEND<br>No.012</span></div><div class="legend-content"><div class="meta"><span>祭り</span><span>📍 香南市</span></div><h3>夜空を焦がす、絵金の町。</h3><p>闇の中でだけ、屏風絵が目を覚ます。</p><span class="card-arrow">→</span></div></article>
-        <article class="legend-card paper"><div class="legend-visual"><b>紙</b><span>LEGEND<br>No.027</span></div><div class="legend-content"><div class="meta"><span>職人</span><span>📍 土佐市</span></div><h3>海を渡った、和紙の手ざわり。</h3><p>千年の流れを、指先ですくう人。</p><span class="card-arrow">→</span></div></article>
+        <article class="legend-card sun discoverable-card" role="button" tabindex="0" data-discover-card data-discover-legend="legend-kokuto-001" data-discover-area="西部" aria-label="潮風が育てる、幻の黒糖。を開く"><div class="legend-visual"><b>◒</b><span>LEGEND<br>No.001</span></div><div class="legend-content"><div class="meta"><span>食</span><span>📍 黒潮町</span></div><h3>潮風が育てる、幻の黒糖。</h3><p>火入れは一年に、ほんの数日。</p><span class="discovery-status" hidden>発見済み ✓</span><span class="card-arrow">→</span></div></article>
+        <article class="legend-card night discoverable-card" role="button" tabindex="0" data-discover-card data-discover-legend="legend-ekin-012" data-discover-area="中央部" aria-label="夜空を焦がす、絵金の町。を開く"><div class="legend-visual"><b>火</b><span>LEGEND<br>No.012</span></div><div class="legend-content"><div class="meta"><span>祭り</span><span>📍 香南市</span></div><h3>夜空を焦がす、絵金の町。</h3><p>闇の中でだけ、屏風絵が目を覚ます。</p><span class="discovery-status" hidden>発見済み ✓</span><span class="card-arrow">→</span></div></article>
+        <article class="legend-card paper discoverable-card" role="button" tabindex="0" data-discover-card data-discover-legend="legend-washi-027" data-discover-area="中央部" aria-label="海を渡った、和紙の手ざわり。を開く"><div class="legend-visual"><b>紙</b><span>LEGEND<br>No.027</span></div><div class="legend-content"><div class="meta"><span>職人</span><span>📍 土佐市</span></div><h3>海を渡った、和紙の手ざわり。</h3><p>千年の流れを、指先ですくう人。</p><span class="discovery-status" hidden>発見済み ✓</span><span class="card-arrow">→</span></div></article>
       </div>
     </section>
 
@@ -94,6 +97,8 @@
 
     <section id="join" class="join section" aria-labelledby="join-title"><div class="join-mark"><b>✦</b><span>いいもの<br>ファンクラブ</span></div><p class="eyebrow dark">JOIN THE QUEST</p><h2 id="join-title">あなたの「誰かに教えたい」を、<br>次の伝説に。</h2><p>有名じゃなくていい。ランキングも、点数もない。<br>あなたの心に残った高知を、私たちに教えてください。</p><button id="join-btn">▶ 伝説を投稿する</button></section>
 
+    <dialog id="legend-preview-dialog" class="legend-preview-dialog" aria-labelledby="legend-preview-title"><div class="legend-preview-head"><small>LEGEND RESEARCH LOG</small><button id="close-legend-preview" type="button" aria-label="伝説の案内を閉じる">×</button></div><div class="meta"><span id="legend-preview-category"></span><span id="legend-preview-place"></span></div><h2 id="legend-preview-title"></h2><p id="legend-preview-summary"></p><p class="research-note">▶ この伝説は現在調査中です</p></dialog>
+
     <dialog id="post-dialog" class="post-dialog"><form id="post-form"><div class="dialog-head"><div><small>NEW QUEST</small><h2>伝説を記録する</h2></div><button type="button" id="close-dialog" aria-label="閉じる">×</button></div><p class="dialog-note">あなたが誰かに語りたくなる、高知の物語を教えてください。</p>
       <label><span>📍 場所</span><input name="place" required maxlength="40" placeholder="例：四万十市"></label><label><span>📖 伝説</span><input name="legend" required maxlength="60" placeholder="例：川の香りを運ぶ、春の青のり"></label><label><span>✨ なぜ伝説なのか</span><textarea name="why" required maxlength="240" rows="4" placeholder="心に残った理由や物語"></textarea></label><label><span>🎒 どうやって会えるか</span><textarea name="access" required maxlength="180" rows="3" placeholder="時期、行き方、会うためのヒント"></textarea></label><label><span>▶ YouTube動画（任意）</span><input name="youtube" type="url" inputmode="url" placeholder="https://youtu.be/..." aria-describedby="youtube-help"><small id="youtube-help" class="field-help">この伝説が分かる動画のURLを入力できます。</small></label><label><span>なまえ（任意）</span><input name="author" maxlength="30" placeholder="名もなき冒険者"></label><div class="form-status" id="form-status" aria-live="polite"></div><button class="submit-post" type="submit">▶ 冒険手帳に記録する</button><small class="save-note">投稿は管理者の確認後、みんなの伝説に公開されます。</small>
     </form></dialog>
@@ -102,6 +107,7 @@
   <footer><div class="footer-brand"><span class="brand-mark">伝</span><div><b>コウチの伝説</b><small>まだ、誰も知らない高知に出会う。</small></div></div><p>高知で一番ワクワクする冒険メディアを目指して。</p><span>© 2026 LEGENDS OF KOCHI</span></footer>
   <noscript><div class="noscript-message">このページの物語はお読みいただけます。投稿、音声、メニュー、地図の切り替えなどの機能を使うにはJavaScriptを有効にしてください。</div></noscript>
   <div id="progress-message" class="progress-message" role="status" aria-live="polite" aria-atomic="true"></div>
-  <script type="module" src="./src/main.js?v=20260801-11"></script>
+  <script type="module" src="./src/main.js?v=20260801-12"></script>
 </body>
 </html>
+
