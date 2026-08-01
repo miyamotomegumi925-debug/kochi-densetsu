@@ -1,6 +1,3 @@
-Exit code: 0
-Wall time: 6.1 seconds
-Output:
 import { dbSelect, dbInsert, uploadSubmissionImage } from './supabase.js?v=20260801-1';
 
 function ensureHeroIntroduction() {
@@ -447,4 +444,3 @@ document.querySelectorAll('[data-area]').forEach(button => button.addEventListen
 }));
 
 loadPublicData();
-
