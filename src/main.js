@@ -84,6 +84,9 @@ const scrollToSection = (id, behavior = 'smooth') => {
   document.getElementById(id)?.scrollIntoView({ behavior, block:'start' });
 };
 const finishQuestStart = isReduced => {
+  if (!questStarting) return;
+  clearQuestTimers();
+  questStarting = false;
   questOverlay.classList.remove('quest-start-active');
   questOverlay.setAttribute('aria-hidden', 'true');
   document.body.classList.remove('game-starting');
@@ -91,19 +94,19 @@ const finishQuestStart = isReduced => {
   todaySection.classList.add('quest-arrived');
   scheduleQuestStep(() => todayHeading?.focus({ preventScroll:true }), isReduced ? 0 : 160);
   scheduleQuestStep(() => todaySection.classList.remove('quest-arrived'), isReduced ? 180 : 850);
-  scheduleQuestStep(() => {
-    startButton.textContent = 'PRESS START';
-    startButton.disabled = false;
-    startButton.removeAttribute('aria-disabled');
-    questStarting = false;
-  }, isReduced ? 80 : 250);
+  startButton.textContent = 'PRESS START';
+  startButton.removeAttribute('aria-busy');
 };
-const startQuest = () => {
-  if (questStarting) return;
+const startQuest = event => {
+  event?.preventDefault();
+  if (questStarting) {
+    finishQuestStart(reducedMotion.matches);
+    return;
+  }
   questStarting = true;
   clearQuestTimers();
-  startButton.disabled = true;
-  startButton.setAttribute('aria-disabled', 'true');
+  todaySection.classList.remove('quest-arrived');
+  startButton.setAttribute('aria-busy', 'true');
   startButton.textContent = 'GAME START!';
   document.body.classList.add('game-starting');
   questOverlay.setAttribute('aria-hidden', 'false');
@@ -114,15 +117,12 @@ const startQuest = () => {
 
 startButton.addEventListener('pointerdown', () => { unlockAudio().catch(() => null); }, { passive:true });
 startButton.addEventListener('click', startQuest);
+startButton.addEventListener('keydown', event => {
+  if (event.key === ' ') startQuest(event);
+});
+questOverlay.addEventListener('click', () => finishQuestStart(reducedMotion.matches));
 document.querySelectorAll('[data-go]:not(.primary)').forEach(button => button.addEventListener('click', async () => {
-  const isStart = button.classList.contains('primary');
-  if (isStart) {
-    const sounded = await playStartSound();
-    button.textContent = sounded ? '♪ GAME START!' : 'GAME START!';
-    document.body.classList.add('game-starting');
-    setTimeout(() => { document.body.classList.remove('game-starting'); button.textContent = 'PRESS START'; }, 900);
-  }
-  setTimeout(() => document.getElementById(button.dataset.go)?.scrollIntoView({ behavior:'smooth' }), isStart ? 700 : 0);
+  scrollToSection(button.dataset.go);
   menu.classList.remove('open');
   menuButton.textContent = '☰';
   menuButton.setAttribute('aria-expanded', 'false');
