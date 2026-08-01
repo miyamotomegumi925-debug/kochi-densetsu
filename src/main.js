@@ -27,6 +27,15 @@ const VALID_AREAS = ['東部','中央部','西部','四万十'];
 const emptyProgress = () => ({ discoveredLegends:[], discoveredAreas:[], level:1 });
 const uniqueStrings = value => [...new Set((Array.isArray(value) ? value : []).map(String).map(item => item.trim()).filter(Boolean))];
 
+const resetProgressFromUrl = () => {
+  const url = new URL(window.location.href);
+  if (url.searchParams.get('resetProgress') !== '1') return;
+  try { window.localStorage.removeItem(PROGRESS_STORAGE_KEY); } catch {}
+  url.searchParams.delete('resetProgress');
+  window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+};
+resetProgressFromUrl();
+
 function getAdventurerLevel(discoveredCount) {
   if (discoveredCount >= 20) return { level:5, title:'伝説の継承者' };
   if (discoveredCount >= 10) return { level:4, title:'土佐の語り部' };
@@ -75,18 +84,24 @@ const showProgressMessage = message => {
   progressMessageTimer = window.setTimeout(() => progressMessage.classList.remove('show'), reducedMotion?.matches ? 250 : 1600);
 };
 const updateDiscoveredControls = () => {
-  document.querySelectorAll('[data-discover-legend]').forEach(control => {
-    const discovered = playerProgress.discoveredLegends.includes(control.dataset.discoverLegend);
-    control.classList.toggle('is-discovered', discovered);
-    if (control.matches('[data-discover-card]')) {
-      const status = control.querySelector('.discovery-status');
-      if (status) status.hidden = !discovered;
-      control.dataset.defaultLabel ||= control.getAttribute('aria-label') || '伝説を開く';
-      control.setAttribute('aria-label', `${control.dataset.defaultLabel}${discovered ? '（発見済み）' : ''}`);
-    } else if (discovered) {
-      control.textContent = '発見済み ✓';
-      control.setAttribute('aria-label', `${control.dataset.discoverLegend}の伝説は発見済みです`);
+  document.querySelectorAll('[data-discover-card]').forEach(card => {
+    const discovered = playerProgress.discoveredLegends.includes(card.dataset.discoverLegend);
+    card.classList.toggle('is-discovered', discovered);
+    const status = card.querySelector('.discovery-status');
+    const action = card.querySelector('[data-discover-action]');
+    if (status) status.hidden = !discovered;
+    if (action) {
+      action.textContent = discovered ? '▶ もう一度見る' : action.dataset.defaultLabel;
+      action.setAttribute('aria-label', discovered ? `${card.querySelector('h3')?.textContent || '伝説'}をもう一度見る（発見済み）` : action.dataset.defaultLabel);
     }
+  });
+  document.querySelectorAll('#today-feature-card [data-discover-action]').forEach(action => {
+    const discovered = playerProgress.discoveredLegends.includes(action.dataset.discoverLegend);
+    action.classList.toggle('is-discovered', discovered);
+    action.textContent = discovered ? '▶ もう一度見る' : action.dataset.defaultLabel;
+    action.setAttribute('aria-label', discovered ? '今日の伝説をもう一度見る（発見済み）' : action.dataset.defaultLabel);
+    const status = action.closest('.feature-body')?.querySelector('.today-discovery-status');
+    if (status) status.hidden = !discovered;
   });
 };
 const renderProgress = () => {
@@ -101,7 +116,7 @@ const renderProgress = () => {
   document.querySelector('#next-level-progress').textContent = next.max ? 'MAX LEVEL / すべての称号を獲得' : `次のレベルまで あと${next.remaining}つ`;
   updateDiscoveredControls();
 };
-const discoverLegend = (legendId, area) => {
+const discoverLegend = (legendId, area, title) => {
   const id = String(legendId || '').trim();
   if (!id || playerProgress.discoveredLegends.includes(id)) { updateDiscoveredControls(); return false; }
   const previousLevel = getAdventurerLevel(playerProgress.discoveredLegends.length).level;
@@ -110,7 +125,8 @@ const discoverLegend = (legendId, area) => {
   const currentLevel = getAdventurerLevel(playerProgress.discoveredLegends.length);
   saveProgress();
   renderProgress();
-  showProgressMessage(currentLevel.level > previousLevel ? `LEVEL UP！\n${currentLevel.title}になった` : `伝説を ${playerProgress.discoveredLegends.length}つ 発見した！`);
+  const discoveryNotice = `LEGEND DISCOVERED！\n「${String(title || '新しい伝説').trim()}」を発見した`;
+  showProgressMessage(currentLevel.level > previousLevel ? `${discoveryNotice}\nLEVEL UP！ ${currentLevel.title}になった` : discoveryNotice);
   return true;
 };
 
@@ -222,35 +238,29 @@ document.querySelectorAll('[data-go]:not(.primary)').forEach(button => button.ad
   menuButton.setAttribute('aria-expanded', 'false');
 }));
 
-document.querySelector('#today-feature-card').addEventListener('click', event => {
-  const control = event.target.closest('[data-discover-legend]');
-  if (!control) return;
-  discoverLegend(control.dataset.discoverLegend, control.dataset.discoverArea);
-});
-
 const legendPreviewDialog = document.querySelector('#legend-preview-dialog');
 const featuredLegendGrid = document.querySelector('#featured-legend-grid');
 let lastPreviewTrigger;
-const openLegendPreview = card => {
+const openLegendPreview = (card, trigger) => {
   const meta = card.querySelectorAll('.meta span');
   document.querySelector('#legend-preview-category').textContent = meta[0]?.textContent || '伝説';
   document.querySelector('#legend-preview-place').textContent = meta[1]?.textContent || '';
   document.querySelector('#legend-preview-title').textContent = card.querySelector('h3')?.textContent || '';
-  document.querySelector('#legend-preview-summary').textContent = card.querySelector('.legend-content>p')?.textContent || '';
-  discoverLegend(card.dataset.discoverLegend, card.dataset.discoverArea);
-  lastPreviewTrigger = card;
+  document.querySelector('#legend-preview-summary').textContent = card.querySelector('.legend-content>p, .feature-body>p')?.textContent || '';
+  const legendId = trigger.dataset.discoverLegend || card.dataset.discoverLegend;
+  const area = trigger.dataset.discoverArea || card.dataset.discoverArea;
+  discoverLegend(legendId, area, card.querySelector('h3')?.textContent);
+  lastPreviewTrigger = trigger;
   legendPreviewDialog.showModal();
 };
 featuredLegendGrid.addEventListener('click', event => {
-  const card = event.target.closest('[data-discover-card]');
-  if (card) openLegendPreview(card);
+  const action = event.target.closest('[data-discover-action]');
+  const card = action?.closest('[data-discover-card]');
+  if (action && card) openLegendPreview(card, action);
 });
-featuredLegendGrid.addEventListener('keydown', event => {
-  const card = event.target.closest('[data-discover-card]');
-  if (card && ['Enter',' '].includes(event.key)) {
-    event.preventDefault();
-    openLegendPreview(card);
-  }
+document.querySelector('#today-feature-card').addEventListener('click', event => {
+  const action = event.target.closest('[data-discover-action]');
+  if (action) openLegendPreview(document.querySelector('#today-feature-card'), action);
 });
 document.querySelector('#close-legend-preview').addEventListener('click', () => legendPreviewDialog.close());
 legendPreviewDialog.addEventListener('click', event => { if (event.target === legendPreviewDialog) legendPreviewDialog.close(); });
@@ -357,7 +367,7 @@ const getLegendProgressId = legend => {
 };
 const legendCardHtml = legend => {
   const progressId = `legend-new-${getLegendProgressId(legend)}`;
-  return `<article class="legend-card paper discoverable-card" role="button" tabindex="0" data-discover-card data-discover-legend="${escapeHtml(progressId)}" data-discover-area="${escapeHtml(legend.area || '')}" aria-label="${escapeHtml(legend.title)}を開く"><div class="legend-visual">${legend.image_url ? `<img src="${escapeHtml(legend.image_url)}" alt="${escapeHtml(legend.title)}">` : `<b>${escapeHtml(legend.category?.slice(0,1) || '伝')}</b>`}<span>LEGEND<br>No.${escapeHtml(legend.legend_no || '---')}</span></div><div class="legend-content"><div class="meta"><span>${escapeHtml(legend.category)}</span><span>📍 ${escapeHtml(legend.place)}</span></div><h3>${escapeHtml(legend.title)}</h3><p>${escapeHtml(legend.summary)}</p><span class="discovery-status" hidden>発見済み ✓</span><span class="card-arrow">→</span></div></article>`;
+  return `<article class="legend-card paper discoverable-card" data-discover-card data-discover-legend="${escapeHtml(progressId)}" data-discover-area="${escapeHtml(legend.area || '')}"><div class="legend-visual">${legend.image_url ? `<img src="${escapeHtml(legend.image_url)}" alt="${escapeHtml(legend.title)}">` : `<b>${escapeHtml(legend.category?.slice(0,1) || '伝')}</b>`}<span>LEGEND<br>No.${escapeHtml(legend.legend_no || '---')}</span></div><div class="legend-content"><div class="meta"><span>${escapeHtml(legend.category)}</span><span>📍 ${escapeHtml(legend.place)}</span></div><h3>${escapeHtml(legend.title)}</h3><p>${escapeHtml(legend.summary)}</p><span class="discovery-status" hidden>発見済み ✓</span><button type="button" class="discover-action" data-discover-action data-default-label="▶ この伝説を発見する">▶ この伝説を発見する</button></div></article>`;
 };
 function applyHomeSettings(settings, publishedLegends) {
   const featured = settings.home_featured || {};
@@ -365,8 +375,8 @@ function applyHomeSettings(settings, publishedLegends) {
   if (today) {
     const progressId = getLegendProgressId(today);
     const discoveryAttributes = `data-discover-legend="${escapeHtml(progressId)}" data-discover-area="${escapeHtml(today.area || '')}"`;
-    const readControl = today.detail_url ? `<a class="feature-link" href="${escapeHtml(today.detail_url)}" ${discoveryAttributes}>▶ この伝説を読む</a>` : `<button id="read-legend" type="button" ${discoveryAttributes}>▶ この伝説を読む</button>`;
-    document.querySelector('#today-feature-card').innerHTML = `<div class="feature-art" role="img" aria-label="${escapeHtml(today.title)}">${today.image_url ? `<img src="${escapeHtml(today.image_url)}" alt="">` : `<span>${escapeHtml(today.place)}</span>`}<b>${escapeHtml(today.legend_no || '---')}</b></div><div class="feature-body"><div class="meta"><span>${escapeHtml(today.category)}</span><span>📍 ${escapeHtml(today.place)}</span></div><h3>${escapeHtml(today.title)}</h3><p>${escapeHtml(today.summary)}</p>${readControl}</div>`;
+    const readControl = `<button id="read-legend" type="button" data-discover-action data-default-label="▶ この伝説を読む" ${discoveryAttributes}>▶ この伝説を読む</button>`;
+    document.querySelector('#today-feature-card').innerHTML = `<div class="feature-art" role="img" aria-label="${escapeHtml(today.title)}">${today.image_url ? `<img src="${escapeHtml(today.image_url)}" alt="">` : `<span>${escapeHtml(today.place)}</span>`}<b>${escapeHtml(today.legend_no || '---')}</b></div><div class="feature-body"><div class="meta"><span>${escapeHtml(today.category)}</span><span>📍 ${escapeHtml(today.place)}</span></div><h3>${escapeHtml(today.title)}</h3><p>${escapeHtml(today.summary)}</p><span class="today-discovery-status" hidden>発見済み ✓</span>${readControl}</div>`;
     updateDiscoveredControls();
   }
   const newLegends = (featured.new_legend_ids || []).map(id => publishedLegends.find(x => x.id === id)).filter(Boolean);
