@@ -1,5 +1,27 @@
 import { dbSelect, dbInsert, uploadSubmissionImage } from './supabase.js?v=20260801-1';
 
+function ensureHeroIntroduction() {
+  const consolePanel = document.querySelector('.game-console');
+  if (!consolePanel || consolePanel.querySelector('.hero-intro')) return;
+  consolePanel.insertAdjacentHTML('afterbegin', `
+    <div class="hero-intro">
+      <p class="hero-tagline">まだ、誰も知らない高知に出会う。</p>
+      <h1>高知に眠る100の伝説を集める旅。</h1>
+      <p class="hero-description">人、文化、食、風景、祭り。まだ知らない高知の物語を、毎日ひとつ発見する冒険メディアです。</p>
+    </div>
+    <nav class="hero-commands" aria-label="このサイトでできること">
+      <button type="button" data-go="today"><span aria-hidden="true">▶</span> 伝説を読む</button>
+      <button type="button" data-go="map"><span aria-hidden="true">⌖</span> 地図から探す</button>
+      <button type="button" data-go="join"><span aria-hidden="true">＋</span> 伝説を教える</button>
+    </nav>`);
+  consolePanel.querySelector('.hero-copy h1')?.remove();
+  const heroCopy = consolePanel.querySelector('.hero-copy');
+  const hud = consolePanel.querySelector('.game-hud');
+  if (heroCopy && hud) heroCopy.after(hud);
+}
+
+ensureHeroIntroduction();
+
 const menu = document.querySelector('.mobile-menu');
 const menuButton = document.querySelector('.menu-btn');
 menuButton.addEventListener('click', () => {
@@ -77,6 +99,23 @@ const getYouTubeId = value => {
     return /^[\w-]{6,15}$/.test(id) ? id : '';
   } catch { return ''; }
 };
+const enableAnalytics = analytics => {
+  const measurementId = analytics?.enabled !== false ? analytics?.measurement_id?.trim().toUpperCase() : '';
+  if (!/^G-[A-Z0-9]+$/.test(measurementId) || document.querySelector('script[data-google-analytics]')) return;
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = function(){ window.dataLayer.push(arguments); };
+  window.gtag('js', new Date());
+  window.gtag('config', measurementId, {
+    anonymize_ip:true,
+    allow_google_signals:false,
+    allow_ad_personalization_signals:false
+  });
+  const script = document.createElement('script');
+  script.async = true;
+  script.dataset.googleAnalytics = measurementId;
+  script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(measurementId)}`;
+  document.head.append(script);
+};
 const renderPosts = posts => {
   document.querySelector('#post-count').textContent = `${String(posts.length).padStart(3,'0')} POSTS`;
   emptyState.hidden = posts.length > 0;
@@ -93,6 +132,7 @@ const loadPublicData = async () => {
       dbSelect('site_settings','select=*')
     ]);
     const publicSettings = Object.fromEntries(settingRows.map(row => [row.key,row.value]));
+    enableAnalytics(publicSettings.analytics);
     renderPosts(posts);
     document.querySelector('#db-legend-count').textContent = String(publishedLegends.length).padStart(3,'0');
     document.querySelector('#db-legends').innerHTML = publishedLegends.map(legend => {
