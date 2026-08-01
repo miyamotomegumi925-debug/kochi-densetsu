@@ -68,7 +68,7 @@ function App(){
             <div className="meta"><span>食</span><span>📍 四万十市</span></div>
             <h3>川の香りを、<br/>春の食卓へ。</h3>
             <p>一年のうち、いちばん寒い季節。四万十川の河口で、鮮やかな緑がゆらめく。地元の人が待ちわびる、短い旬の物語。</p>
-            <button onClick={()=>setSaved(!saved)}>{saved?'冒険手帳に記録しました':'この伝説を読む'} <ArrowRight size={17}/></button>
+            <button onClick={()=>setSaved(!saved)}>{saved?'もう一度開く':'この伝説を開く'} <ArrowRight size={17}/></button>
           </div>
         </article>
       </div>
