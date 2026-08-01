@@ -10,7 +10,7 @@ function ensureHeroIntroduction() {
       <p class="hero-description">人、文化、食、風景、祭り。まだ知らない高知の物語を、毎日ひとつ発見する冒険メディアです。</p>
     </div>
     <nav class="hero-commands" aria-label="このサイトでできること">
-      <button type="button" data-go="today"><span aria-hidden="true">▶</span> 伝説を読む</button>
+      <button type="button" data-go="today"><span aria-hidden="true">▶</span> 伝説を開く</button>
       <button type="button" data-go="map"><span aria-hidden="true">⌖</span> 地図から探す</button>
       <button type="button" data-go="join"><span aria-hidden="true">＋</span> 伝説を教える</button>
     </nav>`);
@@ -91,15 +91,15 @@ const updateDiscoveredControls = () => {
     const action = card.querySelector('[data-discover-action]');
     if (status) status.hidden = !discovered;
     if (action) {
-      action.textContent = discovered ? '▶ もう一度見る' : action.dataset.defaultLabel;
-      action.setAttribute('aria-label', discovered ? `${card.querySelector('h3')?.textContent || '伝説'}をもう一度見る（発見済み）` : action.dataset.defaultLabel);
+      action.textContent = discovered ? '▶ もう一度開く' : action.dataset.defaultLabel;
+      action.setAttribute('aria-label', discovered ? `${card.querySelector('h3')?.textContent || '伝説'}をもう一度開く（発見済み）` : action.dataset.defaultLabel);
     }
   });
   document.querySelectorAll('#today-feature-card [data-discover-action]').forEach(action => {
     const discovered = playerProgress.discoveredLegends.includes(action.dataset.discoverLegend);
     action.classList.toggle('is-discovered', discovered);
-    action.textContent = discovered ? '▶ もう一度見る' : action.dataset.defaultLabel;
-    action.setAttribute('aria-label', discovered ? '今日の伝説をもう一度見る（発見済み）' : action.dataset.defaultLabel);
+    action.textContent = discovered ? '▶ もう一度開く' : action.dataset.defaultLabel;
+    action.setAttribute('aria-label', discovered ? '今日の伝説をもう一度開く（発見済み）' : action.dataset.defaultLabel);
     const status = action.closest('.feature-body')?.querySelector('.today-discovery-status');
     if (status) status.hidden = !discovered;
   });
@@ -392,7 +392,7 @@ const getLegendProgressId = legend => {
 };
 const legendCardHtml = legend => {
   const progressId = `legend-new-${getLegendProgressId(legend)}`;
-  return `<article class="legend-card paper discoverable-card" data-discover-card data-discover-legend="${escapeHtml(progressId)}" data-discover-area="${escapeHtml(legend.area || '')}"><div class="legend-visual">${legend.image_url ? `<img src="${escapeHtml(legend.image_url)}" alt="${escapeHtml(legend.title)}">` : `<b>${escapeHtml(legend.category?.slice(0,1) || '伝')}</b>`}<span>LEGEND<br>No.${escapeHtml(legend.legend_no || '---')}</span></div><div class="legend-content"><div class="meta"><span>${escapeHtml(legend.category)}</span><span>📍 ${escapeHtml(legend.place)}</span></div><h3>${escapeHtml(legend.title)}</h3><p>${escapeHtml(legend.summary)}</p><span class="discovery-status" hidden>発見済み ✓</span><button type="button" class="discover-action" data-discover-action data-default-label="▶ この伝説を発見する">▶ この伝説を発見する</button></div></article>`;
+  return `<article class="legend-card paper discoverable-card" data-discover-card data-discover-legend="${escapeHtml(progressId)}" data-discover-area="${escapeHtml(legend.area || '')}"><div class="legend-visual">${legend.image_url ? `<img src="${escapeHtml(legend.image_url)}" alt="${escapeHtml(legend.title)}">` : `<b>${escapeHtml(legend.category?.slice(0,1) || '伝')}</b>`}<span>LEGEND<br>No.${escapeHtml(legend.legend_no || '---')}</span></div><div class="legend-content"><div class="meta"><span>${escapeHtml(legend.category)}</span><span>📍 ${escapeHtml(legend.place)}</span></div><h3>${escapeHtml(legend.title)}</h3><p>${escapeHtml(legend.summary)}</p><span class="discovery-status" hidden>発見済み ✓</span><button type="button" class="discover-action" data-discover-action data-default-label="▶ この伝説を開く">▶ この伝説を開く</button></div></article>`;
 };
 function applyHomeSettings(settings, publishedLegends) {
   const featured = settings.home_featured || {};
@@ -400,7 +400,7 @@ function applyHomeSettings(settings, publishedLegends) {
   if (today) {
     const progressId = getLegendProgressId(today);
     const discoveryAttributes = `data-discover-legend="${escapeHtml(progressId)}" data-discover-area="${escapeHtml(today.area || '')}"`;
-    const readControl = `<button id="read-legend" type="button" data-discover-action data-default-label="▶ この伝説を読む" ${discoveryAttributes}>▶ この伝説を読む</button>`;
+    const readControl = `<button id="read-legend" type="button" data-discover-action data-default-label="▶ この伝説を開く" ${discoveryAttributes}>▶ この伝説を開く</button>`;
     document.querySelector('#today-feature-card').innerHTML = `<div class="feature-art" role="img" aria-label="${escapeHtml(today.title)}">${today.image_url ? `<img src="${escapeHtml(today.image_url)}" alt="">` : `<span>${escapeHtml(today.place)}</span>`}<b>${escapeHtml(today.legend_no || '---')}</b></div><div class="feature-body"><div class="meta"><span>${escapeHtml(today.category)}</span><span>📍 ${escapeHtml(today.place)}</span></div><h3>${escapeHtml(today.title)}</h3><p>${escapeHtml(today.summary)}</p><span class="today-discovery-status" hidden>発見済み ✓</span>${readControl}</div>`;
     updateDiscoveredControls();
   }
@@ -443,7 +443,7 @@ postForm.addEventListener('submit', async event => {
   if (image?.size > 5 * 1024 * 1024) { status.textContent = '画像は5MB以下にしてください。'; return; }
   if (image?.size && !['image/jpeg','image/png','image/webp'].includes(image.type)) { status.textContent = 'JPEG・PNG・WebP画像を選択してください。'; return; }
   submitButton.disabled = true;
-  status.textContent = '送信中…';
+  status.textContent = '投稿中…';
   try {
     const imageUrl = image?.size ? await uploadSubmissionImage(image) : null;
     await dbInsert('submissions', {
@@ -455,7 +455,7 @@ postForm.addEventListener('submit', async event => {
     status.textContent = '✓ 投稿を受け付けました！ 管理者の確認後に公開されます。';
     setTimeout(() => { dialog.close(); postForm.reset(); status.textContent = ''; }, 1200);
   } catch (error) {
-    let message = '送信できませんでした。';
+    let message = '投稿できませんでした。';
     try {
       const detail = JSON.parse(error.message);
       if (detail.code === '42501') message += ' 投稿権限が拒否されています（RLS）。';
