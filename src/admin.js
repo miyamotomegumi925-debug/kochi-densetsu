@@ -12,7 +12,17 @@ let editingLegend = null;
 const coordinateRow = $('#legend-form').querySelectorAll(':scope > div')[1];
 coordinateRow.insertAdjacentHTML('afterend', '<label class="map-verified-label"><input name="map_verified" type="checkbox"> この緯度・経度は現地を特定できる正確な位置として確認済み（地図に表示する）</label><small class="location-warning">未確認、概算位置、場所を公開すべきでない場合はチェックしないでください。</small>');
 $('#legend-form').querySelector('input[name="title"]').insertAdjacentHTML('afterend', '<label class="image-upload-label">伝説の写真<input name="image" type="file" accept="image/jpeg,image/png,image/webp"><small>JPEG・PNG・WebP、5MBまで</small></label>');
+$('#legend-form .image-upload-label').insertAdjacentHTML('afterend', '<div id="legend-image-preview" class="legend-image-preview" hidden><img alt="引き継ぐ伝説の写真"><p></p></div>');
 $('[data-tab="featured"]').textContent = '今日・新しい伝説';
+
+function showLegendImagePreview(imageUrl, message = '') {
+  const preview = $('#legend-image-preview');
+  const image = preview.querySelector('img');
+  const text = preview.querySelector('p');
+  preview.hidden = !imageUrl;
+  image.src = imageUrl || '';
+  text.textContent = imageUrl ? message : '';
+}
 
 async function ensureSession() {
   if (!session?.access_token) throw new Error('ログインが必要です');
@@ -77,6 +87,10 @@ function renderSettings() {
   const form = $('#seasonal-form');
   ['season','label','title','description','link'].forEach(name => { if (seasonal[name] != null) form.elements[name].value = seasonal[name]; });
   form.elements.enabled.checked = seasonal.enabled !== false;
+  const analytics = settings.analytics || {};
+  const analyticsForm = $('#analytics-form');
+  analyticsForm.elements.measurement_id.value = analytics.measurement_id || '';
+  analyticsForm.elements.enabled.checked = analytics.enabled !== false;
 }
 
 function renderLegends() {
@@ -110,7 +124,7 @@ $('#logout').onclick = logout;
 $('#submission-filter').onchange = renderSubmissions;
 function activateTab(name) {
   document.querySelectorAll('[data-tab]').forEach(x => x.classList.toggle('active', x.dataset.tab === name));
-  ['submissions','legends','featured','seasonal'].forEach(tab => { $(`#tab-${tab}`).hidden = tab !== name; });
+  ['submissions','legends','featured','seasonal','analytics'].forEach(tab => { $(`#tab-${tab}`).hidden = tab !== name; });
 }
 document.querySelectorAll('[data-tab]').forEach(button => button.onclick = () => activateTab(button.dataset.tab));
 $('#admin-submissions').onclick = async event => {
@@ -129,7 +143,10 @@ $('#admin-submissions').onclick = async event => {
     form.elements.access.value = source.access;
     form.elements.youtube.value = source.youtube || '';
     form.elements.status.value = 'draft';
-    $('#legend-status').textContent = '★ 投稿内容を引き継ぎました。カテゴリーとエリアを選び、内容を確認して登録してください。';
+    showLegendImagePreview(source.image_url, '★ 投稿画像を図鑑へ引き継ぎます。別の写真を選ぶと差し替えられます。');
+    $('#legend-status').textContent = source.image_url
+      ? '★ 投稿内容と画像を引き継ぎました。カテゴリーとエリアを選び、内容を確認して登録してください。'
+      : '★ 投稿内容を引き継ぎました。カテゴリーとエリアを選び、内容を確認して登録してください。';
     activateTab('legends');
     form.scrollIntoView({ behavior:'smooth', block:'start' });
     return;
@@ -157,15 +174,24 @@ $('#legend-form').onsubmit = async event => {
   if (duplicate) {
     if (promotionSource) {
       const existing = legends.find(item => item.title.trim() === data.title.trim() && item.place.trim() === data.place.trim());
+      const inheritedExistingImage = !existing.image_url && Boolean(promotionSource.image_url);
       try {
-        await withSession(token => dbUpdate('submissions', promotionSource.id, {
-          promoted_legend_id:existing.id,
-          status:'approved',
-          updated_at:new Date().toISOString()
-        }, token));
+        await withSession(token => Promise.all([
+          dbUpdate('submissions', promotionSource.id, {
+            promoted_legend_id:existing.id,
+            status:'approved',
+            updated_at:new Date().toISOString()
+          }, token),
+          inheritedExistingImage
+            ? dbUpdate('legends', existing.id, { image_url:promotionSource.image_url, updated_at:new Date().toISOString() }, token)
+            : Promise.resolve()
+        ]));
         form.reset();
+        showLegendImagePreview(null);
         promotionSource = null;
-        $('#legend-status').textContent = '✓ すでに登録済みの伝説図鑑と投稿を紐付けました。';
+        $('#legend-status').textContent = inheritedExistingImage
+          ? '✓ 登録済みの伝説図鑑と投稿を紐付け、投稿画像も引き継ぎました。'
+          : '✓ すでに登録済みの伝説図鑑と投稿を紐付けました。';
         await loadDashboard();
       } catch (error) {
         $('#legend-status').textContent = `紐付けできませんでした: ${error.message}`;
@@ -204,6 +230,7 @@ $('#legend-form').onsubmit = async event => {
       }
     });
     form.reset();
+    showLegendImagePreview(null);
     submitButton.textContent = '▶ 図鑑に登録';
     $('#legend-status').textContent = wasEditing ? '✓ 下書きを更新しました。フォームをクリアしました。' : wasPromotion ? '✓ 投稿を伝説図鑑へ移行しました。フォームをクリアしました。' : '✓ 登録しました。フォームをクリアしました。';
     promotionSource = null;
@@ -257,6 +284,24 @@ $('#seasonal-form').onsubmit = async event => {
     await loadDashboard();
   } catch (error) { $('#seasonal-status').textContent = `エラー: ${error.message}`; }
 };
+
+$('#analytics-form').onsubmit = async event => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const measurementId = form.elements.measurement_id.value.trim().toUpperCase();
+  if (measurementId && !/^G-[A-Z0-9]+$/.test(measurementId)) {
+    $('#analytics-status').textContent = 'G-から始まる測定IDを入力してください。';
+    return;
+  }
+  $('#analytics-status').textContent = '保存中…';
+  try {
+    await saveSetting('analytics', { measurement_id:measurementId, enabled:form.elements.enabled.checked });
+    $('#analytics-status').textContent = measurementId && form.elements.enabled.checked
+      ? '✓ アクセス解析を有効にしました。公開サイトへの次回アクセスから計測します。'
+      : '✓ アクセス解析を停止しました。';
+    await loadDashboard();
+  } catch (error) { $('#analytics-status').textContent = `エラー: ${error.message}`; }
+};
 $('#admin-legends').onclick = async event => {
   const button = event.target.closest('[data-legend-action]'); if (!button) return;
   if (button.dataset.legendAction === 'edit') {
@@ -272,6 +317,7 @@ $('#admin-legends').onclick = async event => {
     form.elements.latitude.value = legend.latitude ?? '';
     form.elements.longitude.value = legend.longitude ?? '';
     form.elements.map_verified.checked = legend.map_verified === true;
+    showLegendImagePreview(legend.image_url, '現在の図鑑写真です。別の写真を選ぶと差し替えられます。');
     form.querySelector('[type="submit"]').textContent = '▶ 下書きを更新';
     $('#legend-status').textContent = '✎ 下書きを編集中です。変更後に「下書きを更新」を押してください。写真を選び直さない場合は現在の写真を維持します。';
     form.scrollIntoView({ behavior:'smooth', block:'start' });
