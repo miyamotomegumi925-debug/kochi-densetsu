@@ -5,5 +5,6 @@
 @media(max-width:700px){.admin-tabs{overflow-x:auto}.admin-tabs button{white-space:nowrap;padding:12px}.form-grid{grid-template-columns:1fr}}
 .legend-form .map-verified-label{display:flex;align-items:flex-start;gap:10px;color:#ffd85a;line-height:1.5}.legend-form .map-verified-label input{width:auto;margin:3px 0 0;accent-color:#62ed83}.location-warning{display:block;color:#ff9e97;margin:6px 0 16px}.map-status{border:2px solid;padding:8px;font-size:11px}.map-status.verified{color:#62ed83}.map-status.hidden{color:#aab3c4}
 .image-upload-label{border:3px dashed #8da7d5;padding:14px;color:#ffd85a}.image-upload-label input{margin-top:9px!important}.image-upload-label small{display:block;color:#9fb1d3;margin-top:7px}
+.legend-image-preview{margin-top:12px;padding:12px;border:3px solid #ffd85a;background:#020718}.legend-image-preview[hidden]{display:none}.legend-image-preview img{display:block;width:min(100%,360px);max-height:230px;object-fit:cover;border:3px solid white}.legend-image-preview p{margin:10px 0 0;color:#ffd85a;font-weight:bold;line-height:1.5}
 .check-list{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.check-list label{display:block;color:#ffd85a}.check-list select{margin-top:8px}
 @media(max-width:700px){.check-list{grid-template-columns:1fr}}
