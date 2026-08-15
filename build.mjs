@@ -1,4 +1,5 @@
 import { cp, mkdir, copyFile, rm, writeFile } from 'node:fs/promises';
+await import('./generate-legend-pages.mjs');
 await rm('dist', { recursive: true, force: true });
 await rm('github-pages', { recursive: true, force: true });
 await mkdir('dist/client/src', { recursive: true });

@@ -1,0 +1,5 @@
+.db-legends .db-legend-detail{display:inline-block;margin:8px 12px 4px 0;padding:8px 10px;border:2px solid var(--pixel-gold);color:var(--pixel-gold);text-decoration:none}
+.db-legends .db-legend-detail:hover,.db-legends .db-legend-detail:focus-visible{background:var(--pixel-gold);color:#071b42}
+.discover-action.legend-page-link{color:white!important;text-decoration:none}
+.legend-hero-image{display:block;width:100%;height:auto;max-height:520px;margin:0 0 24px;border:4px solid var(--white);object-fit:cover;image-rendering:auto}
+.share-button.secondary{background:#071b42;color:var(--gold);border-color:var(--gold)}

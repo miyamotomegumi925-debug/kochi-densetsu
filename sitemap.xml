@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://miyamotomegumi925-debug.github.io/kochi-densetsu/</loc>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>https://miyamotomegumi925-debug.github.io/kochi-densetsu/legends/001-shimanto-aonori/</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
+  <url><loc>https://miyamotomegumi925-debug.github.io/kochi-densetsu/</loc></url>
+  <url><loc>https://miyamotomegumi925-debug.github.io/kochi-densetsu/legends/001-shimanto-aonori/</loc></url>
+  <url><loc>https://miyamotomegumi925-debug.github.io/kochi-densetsu/legends/002-adult-kawagaki/</loc></url>
+  <url><loc>https://miyamotomegumi925-debug.github.io/kochi-densetsu/legends/003-lantern-dance/</loc></url>
+  <url><loc>https://miyamotomegumi925-debug.github.io/kochi-densetsu/legends/004-kirin-house/</loc></url>
+  <url><loc>https://miyamotomegumi925-debug.github.io/kochi-densetsu/legends/005-shiho-takoyaki/</loc></url>
+  <url><loc>https://miyamotomegumi925-debug.github.io/kochi-densetsu/legends/006-kure-sake/</loc></url>
+  <url><loc>https://miyamotomegumi925-debug.github.io/kochi-densetsu/legends/007-kashiwajima/</loc></url>
+  <url><loc>https://miyamotomegumi925-debug.github.io/kochi-densetsu/legends/008-tosa-maki/</loc></url>
+  <url><loc>https://miyamotomegumi925-debug.github.io/kochi-densetsu/legends/010-closed-school-cafe/</loc></url>
+  <url><loc>https://miyamotomegumi925-debug.github.io/kochi-densetsu/legends/012-konan-ekin/</loc></url>
+  <url><loc>https://miyamotomegumi925-debug.github.io/kochi-densetsu/legends/027-tosa-washi/</loc></url>
 </urlset>

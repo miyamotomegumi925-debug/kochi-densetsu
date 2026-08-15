@@ -275,7 +275,12 @@ const openLegendPreview = (card, trigger) => {
 featuredLegendGrid.addEventListener('click', event => {
   const action = event.target.closest('[data-discover-action]');
   const card = action?.closest('[data-discover-card]');
-  if (action && card) openLegendPreview(card, action);
+  if (!action || !card) return;
+  if (action.matches('a[href]')) {
+    discoverLegend(action.dataset.discoverLegend || card.dataset.discoverLegend, action.dataset.discoverArea || card.dataset.discoverArea, card.querySelector('h3')?.textContent);
+    return;
+  }
+  openLegendPreview(card, action);
 });
 document.querySelector('#today-feature-card').addEventListener('click', event => {
   const action = event.target.closest('[data-discover-action]');
@@ -350,7 +355,8 @@ const loadPublicData = async () => {
     renderPosts(posts);
     document.querySelector('#db-legends').innerHTML = publishedLegends.map(legend => {
       const videoId = getYouTubeId(legend.youtube);
-      return `<article id="legend-${escapeHtml(legend.id)}" data-legend-category="${escapeHtml(legend.category)}">${legend.image_url ? `<img class="db-legend-image" src="${escapeHtml(legend.image_url)}" alt="${escapeHtml(legend.title)}">` : ''}<span>${escapeHtml(legend.category)} / ${escapeHtml(legend.area)}</span><h3>${escapeHtml(legend.title)}</h3><p>📍 ${escapeHtml(legend.place)}</p><p>${escapeHtml(legend.summary)}</p>${videoId ? `<a href="https://www.youtube.com/watch?v=${videoId}" target="_blank" rel="noopener noreferrer">▶ 動画を見る</a>` : ''}</article>`;
+      const detailUrl = getLegendDetailUrl(legend);
+      return `<article id="legend-${escapeHtml(legend.id)}" data-legend-category="${escapeHtml(legend.category)}">${legend.image_url ? `<img class="db-legend-image" src="${escapeHtml(legend.image_url)}" alt="${escapeHtml(legend.title)}">` : ''}<span>${escapeHtml(legend.category)} / ${escapeHtml(legend.area)}</span><h3>${escapeHtml(legend.title)}</h3><p>📍 ${escapeHtml(legend.place)}</p><p>${escapeHtml(legend.summary)}</p>${detailUrl ? `<a class="db-legend-detail" href="${escapeHtml(detailUrl)}">▶ 個別ページを開く</a>` : ''}${videoId ? `<a href="https://www.youtube.com/watch?v=${videoId}" target="_blank" rel="noopener noreferrer">▶ 動画を見る</a>` : ''}</article>`;
     }).join('');
     setupCategoryLinks();
     applyHomeSettings(publicSettings, publishedLegends);
@@ -392,18 +398,20 @@ function setupCategoryLinks() {
 }
 
 const getLegendProgressId = legend => {
+  const pageNumber = getLegendDetailUrl(legend).match(/\/legends\/(\d{3})-/)?.[1];
+  if (pageNumber) return pageNumber;
   const raw = String(legend?.legend_no || legend?.id || '').trim();
   return /^\d+$/.test(raw) ? raw.padStart(3,'0') : raw;
 };
 const getLegendDetailUrl = legend => {
-  const number = String(legend?.legend_no || '').padStart(3, '0');
-  return number === '001' && /四万十|青のり/.test(`${legend?.place || ''}${legend?.title || ''}`)
-    ? './legends/001-shimanto-aonori/'
-    : '';
+  const pages = window.KOCHI_LEGEND_PAGES || {};
+  return pages[legend?.id] || pages[legend?.title] || '';
 };
 const legendCardHtml = legend => {
-  const progressId = `legend-new-${getLegendProgressId(legend)}`;
-  return `<article class="legend-card paper discoverable-card" data-discover-card data-discover-legend="${escapeHtml(progressId)}" data-discover-area="${escapeHtml(legend.area || '')}"><div class="legend-visual">${legend.image_url ? `<img src="${escapeHtml(legend.image_url)}" alt="${escapeHtml(legend.title)}">` : `<b>${escapeHtml(legend.category?.slice(0,1) || '伝')}</b>`}<span>LEGEND<br>No.${escapeHtml(legend.legend_no || '---')}</span></div><div class="legend-content"><div class="meta"><span>${escapeHtml(legend.category)}</span><span>📍 ${escapeHtml(legend.place)}</span></div><h3>${escapeHtml(legend.title)}</h3><p>${escapeHtml(legend.summary)}</p><span class="discovery-status" hidden>発見済み ✓</span><button type="button" class="discover-action" data-discover-action data-default-label="▶ この伝説を開く">▶ この伝説を開く</button></div></article>`;
+  const detailUrl = getLegendDetailUrl(legend);
+  const progressId = detailUrl ? getLegendProgressId(legend) : `legend-new-${getLegendProgressId(legend)}`;
+  const action = detailUrl ? `<a class="discover-action legend-page-link" href="${escapeHtml(detailUrl)}" data-discover-action data-default-label="▶ この伝説を開く">▶ この伝説を開く</a>` : `<button type="button" class="discover-action" data-discover-action data-default-label="▶ この伝説を開く">▶ この伝説を開く</button>`;
+  return `<article class="legend-card paper discoverable-card" data-discover-card data-discover-legend="${escapeHtml(progressId)}" data-discover-area="${escapeHtml(legend.area || '')}"><div class="legend-visual">${legend.image_url ? `<img src="${escapeHtml(legend.image_url)}" alt="${escapeHtml(legend.title)}">` : `<b>${escapeHtml(legend.category?.slice(0,1) || '伝')}</b>`}<span>LEGEND<br>No.${escapeHtml(legend.legend_no || '---')}</span></div><div class="legend-content"><div class="meta"><span>${escapeHtml(legend.category)}</span><span>📍 ${escapeHtml(legend.place)}</span></div><h3>${escapeHtml(legend.title)}</h3><p>${escapeHtml(legend.summary)}</p><span class="discovery-status" hidden>発見済み ✓</span>${action}</div></article>`;
 };
 function applyHomeSettings(settings, publishedLegends) {
   const featured = settings.home_featured || {};

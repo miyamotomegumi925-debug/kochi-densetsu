@@ -1,0 +1,12 @@
+[
+  {"id":"c7ffb36c-3b9a-46c8-b275-73accf39a48f","legend_no":"002","slug":"adult-kawagaki","title":"大人の川ガキ","category":"人","area":"四万十","place":"四万十市","summary":"歳を重ねても川が好き。子どもよりも川遊びに長けている。","image_url":"https://klyjygzrdqbvndbrcsvn.supabase.co/storage/v1/object/public/submission-images/4f3aa817-1e32-4eed-9f2c-62b76d207861.jpg"},
+  {"id":"c2054f9b-4a67-4d1b-a027-671b8c5d0234","legend_no":"003","slug":"lantern-dance","title":"500キロごえの提灯ぐるぐる","category":"祭り","area":"四万十","place":"四万十市","summary":"大橋通の提灯は生バンド（川じゃん関係者）。","youtube":"https://www.youtube.com/watch?v=gro7S3Qf9_Y"},
+  {"id":"5167bdec-cef2-4e0f-87a3-282e0e542515","legend_no":"004","slug":"kirin-house","title":"いまはなきキリンハウス","category":"食","area":"西部","place":"宿毛市","summary":"お釣りの単位とボリューム！","youtube":"https://www.youtube.com/watch?v=rdEKcwhF3Bc"},
+  {"id":"4c1a2f3e-850f-4b59-b91a-05efc17752aa","legend_no":"005","slug":"shiho-takoyaki","title":"志保ちゃんのたこやき","category":"食","area":"四万十","place":"四万十市中村","summary":"安くてうまい。3個で100円。たれ甘め。","image_url":"https://klyjygzrdqbvndbrcsvn.supabase.co/storage/v1/object/public/legend-images/9ad76506-b617-4217-8ef4-0362d8679b15.jpg","youtube":"https://www.youtube.com/watch?v=t4h7qXetJjs"},
+  {"id":"feb8a08c-fdbb-4d75-b9d9-aef33db2cc46","legend_no":"006","slug":"kure-sake","title":"久礼","category":"酒","area":"中央部","place":"高岡郡中土佐町","summary":"きりっと辛口の日本酒。おいしすぎて飲みすぎないように。","youtube":"https://www.youtube.com/watch?v=xA0UogVBX2g"},
+  {"id":"7a363d47-19d9-487e-a8e0-21b2f4cba557","legend_no":"007","slug":"kashiwajima","title":"栢島","category":"絶景","area":"西部","place":"大月町","summary":"海外の海みたいな美しさ。ここは南国なんだと感じる。"},
+  {"id":"d906a3bd-1a16-488e-a2d2-b4105b1c905c","legend_no":"008","slug":"tosa-maki","title":"土佐巻","category":"食","area":"東部","place":"四万十市","summary":"海外の人に説明するなら「カツオのたたきロール」。でも、巻くと何かが違う。"},
+  {"id":"f6977268-ce33-4c09-a6f4-1fafb057c620","legend_no":"010","slug":"closed-school-cafe","title":"廃校のカフェ","category":"食","area":"四万十","place":"四万十町","summary":"廃校の響きに似合わない、かわいげのある店主がきりもり。","image_url":"https://klyjygzrdqbvndbrcsvn.supabase.co/storage/v1/object/public/legend-images/a2e3e1da-e742-4271-b4b3-db6bc4e18ee4.jpg","youtube":"https://www.youtube.com/watch?v=PtsI5jk-Ykw"},
+  {"id":"legend-ekin-012","legend_no":"012","slug":"konan-ekin","title":"夜空を焦がす、絵金の町。","category":"祭り","area":"中央部","place":"香南市","summary":"闇の中でだけ、屏風絵が目を覚ます。"},
+  {"id":"legend-washi-027","legend_no":"027","slug":"tosa-washi","title":"海を渡った、和紙の手ざわり。","category":"職人","area":"中央部","place":"土佐市","summary":"千年の流れを、指先ですくう人。"}
+]
