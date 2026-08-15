@@ -107,10 +107,54 @@ function renderSettings() {
   const analyticsForm = $('#analytics-form');
   analyticsForm.elements.measurement_id.value = analytics.measurement_id || '';
   analyticsForm.elements.enabled.checked = analytics.enabled !== false;
+  renderArticleOptions();
+}
+
+const ARTICLE_FIELDS = ['heading','lead','overview_heading','overview_body','reason_heading','reason_body','season_heading','season_body','access_heading','access_body','summary_heading','summary_body'];
+const articleSettingKey = legendId => `legend_article_${legendId}`;
+const legendPageUrl = legend => (window.KOCHI_LEGEND_PAGES || {})[legend?.id] || (window.KOCHI_LEGEND_PAGES || {})[legend?.title] || legend?.detail_url || '';
+
+function defaultArticleContent(legend) {
+  return {
+    heading:`【${legend.place || legend.area || '高知'}】${legend.title || ''}`,
+    lead:legend.summary || '',
+    overview_heading:'この伝説の概要',
+    overview_body:legend.summary || '',
+    reason_heading:'なぜ伝説なのか',
+    reason_body:legend.why || '',
+    season_heading:'旬・出会える時期',
+    season_body:legend.season || '',
+    access_heading:'会える場所・アクセス',
+    access_body:legend.access || '',
+    summary_heading:'まとめ｜この伝説を次の冒険者へ',
+    summary_body:`${legend.title || 'この伝説'}は、${legend.place || '高知'}で出会える高知の伝説です。`
+  };
+}
+
+function renderArticleOptions() {
+  const select = $('#article-legend-select');
+  const current = select.value;
+  select.innerHTML = '<option value="">選択してください</option>' + legends.map(legend => `<option value="${esc(legend.id)}">No.${esc(legend.legend_no || '---')} ${esc(legend.title)}［${legend.status === 'published' ? '公開中' : '下書き'}］</option>`).join('');
+  if (legends.some(legend => legend.id === current)) select.value = current;
+}
+
+function openArticleEditor(legendId) {
+  const legend = legends.find(item => item.id === legendId);
+  if (!legend) return;
+  const form = $('#article-form');
+  form.elements.legend_id.value = legend.id;
+  const saved = settings[articleSettingKey(legend.id)] || {};
+  const content = { ...defaultArticleContent(legend), ...saved };
+  ARTICLE_FIELDS.forEach(name => { form.elements[name].value = content[name] || ''; });
+  const pageUrl = legendPageUrl(legend);
+  const linkBox = $('#article-page-link');
+  linkBox.hidden = false;
+  linkBox.innerHTML = pageUrl ? `<a href="${esc(pageUrl)}" target="_blank" rel="noopener">▶ 現在の個別ページを確認する</a>` : '<span>この伝説の個別ページはまだ生成されていません。</span>';
+  $('#article-status').textContent = saved.heading ? '✎ 保存済みの個別ページ内容を編集中です。' : '✎ 図鑑の内容を初期値として読み込みました。';
 }
 
 function renderLegends() {
-  $('#admin-legends').innerHTML = legends.length ? legends.map(x => `<article class="admin-card">${x.image_url ? `<img class="admin-submission-image" src="${esc(x.image_url)}" alt="">` : ''}<div class="admin-card-head"><span class="status ${x.status}">${x.status}</span><span>${esc(x.category)} / ${esc(x.area)}</span></div><h3>${esc(x.title)}</h3><p>📍 ${esc(x.place)}</p><p class="map-status ${x.map_verified ? 'verified' : 'hidden'}">${x.map_verified ? '◆ 正確な位置を確認済み・地図表示対象' : '◇ 位置未確認・地図には表示しません'}</p><p>${esc(x.summary)}</p><div class="admin-actions">${x.status === 'draft' ? `<button data-legend-action="edit" data-id="${x.id}">編集する</button>` : ''}<button data-legend-action="${x.status === 'published' ? 'draft' : 'published'}" data-id="${x.id}">${x.status === 'published' ? '下書きへ' : '公開する'}</button><button data-legend-action="delete" data-id="${x.id}" class="danger">削除</button></div></article>`).join('') : '<p class="admin-empty">図鑑はまだ登録されていません。</p>';
+  $('#admin-legends').innerHTML = legends.length ? legends.map(x => `<article class="admin-card">${x.image_url ? `<img class="admin-submission-image" src="${esc(x.image_url)}" alt="">` : ''}<div class="admin-card-head"><span class="status ${x.status}">${x.status}</span><span>${esc(x.category)} / ${esc(x.area)}</span></div><h3>${esc(x.title)}</h3><p>📍 ${esc(x.place)}</p><p class="map-status ${x.map_verified ? 'verified' : 'hidden'}">${x.map_verified ? '◆ 正確な位置を確認済み・地図表示対象' : '◇ 位置未確認・地図には表示しません'}</p><p>${esc(x.summary)}</p><div class="admin-actions"><button data-legend-action="article" data-id="${x.id}">個別ページ編集</button>${x.status === 'draft' ? `<button data-legend-action="edit" data-id="${x.id}">図鑑を編集</button>` : ''}<button data-legend-action="${x.status === 'published' ? 'draft' : 'published'}" data-id="${x.id}">${x.status === 'published' ? '下書きへ' : '公開する'}</button><button data-legend-action="delete" data-id="${x.id}" class="danger">削除</button></div></article>`).join('') : '<p class="admin-empty">図鑑はまだ登録されていません。</p>';
 }
 
 async function authenticate(email, password) {
@@ -140,7 +184,7 @@ $('#logout').onclick = logout;
 $('#submission-filter').onchange = renderSubmissions;
 function activateTab(name) {
   document.querySelectorAll('[data-tab]').forEach(x => x.classList.toggle('active', x.dataset.tab === name));
-  ['submissions','legends','featured','seasonal','analytics'].forEach(tab => { $(`#tab-${tab}`).hidden = tab !== name; });
+  ['submissions','legends','articles','featured','seasonal','analytics'].forEach(tab => { $(`#tab-${tab}`).hidden = tab !== name; });
 }
 document.querySelectorAll('[data-tab]').forEach(button => button.onclick = () => activateTab(button.dataset.tab));
 $('#admin-submissions').onclick = async event => {
@@ -334,8 +378,42 @@ $('#analytics-form').onsubmit = async event => {
     await loadDashboard();
   } catch (error) { $('#analytics-status').textContent = `エラー: ${error.message}`; }
 };
+$('#article-legend-select').onchange = event => {
+  if (event.currentTarget.value) openArticleEditor(event.currentTarget.value);
+  else {
+    $('#article-form').reset();
+    $('#article-page-link').hidden = true;
+    $('#article-status').textContent = '';
+  }
+};
+$('#article-form').onsubmit = async event => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const legendId = form.elements.legend_id.value;
+  const legend = legends.find(item => item.id === legendId);
+  if (!legend) {
+    $('#article-status').textContent = '編集する伝説を選択してください。';
+    return;
+  }
+  const content = {};
+  ARTICLE_FIELDS.forEach(name => { content[name] = form.elements[name].value.trim(); });
+  $('#article-status').textContent = '保存中…';
+  try {
+    await saveSetting(articleSettingKey(legendId), content);
+    settings[articleSettingKey(legendId)] = content;
+    $('#article-status').textContent = '✓ 個別ページを保存しました。公開ページへ反映されます。';
+  } catch (error) {
+    $('#article-status').textContent = `保存できませんでした: ${error.message}`;
+  }
+};
 $('#admin-legends').onclick = async event => {
   const button = event.target.closest('[data-legend-action]'); if (!button) return;
+  if (button.dataset.legendAction === 'article') {
+    activateTab('articles');
+    openArticleEditor(button.dataset.id);
+    $('#article-form').scrollIntoView({ behavior:'smooth', block:'start' });
+    return;
+  }
   if (button.dataset.legendAction === 'edit') {
     const legend = legends.find(item => item.id === button.dataset.id && item.status === 'draft');
     if (!legend) return;
