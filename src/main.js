@@ -279,7 +279,12 @@ featuredLegendGrid.addEventListener('click', event => {
 });
 document.querySelector('#today-feature-card').addEventListener('click', event => {
   const action = event.target.closest('[data-discover-action]');
-  if (action) openLegendPreview(document.querySelector('#today-feature-card'), action);
+  if (!action) return;
+  if (action.matches('a[href]')) {
+    discoverLegend(action.dataset.discoverLegend, action.dataset.discoverArea, document.querySelector('#today-feature-card h3')?.textContent);
+    return;
+  }
+  openLegendPreview(document.querySelector('#today-feature-card'), action);
 });
 document.querySelector('#close-legend-preview').addEventListener('click', () => legendPreviewDialog.close());
 legendPreviewDialog.addEventListener('click', event => { if (event.target === legendPreviewDialog) legendPreviewDialog.close(); });
@@ -390,6 +395,12 @@ const getLegendProgressId = legend => {
   const raw = String(legend?.legend_no || legend?.id || '').trim();
   return /^\d+$/.test(raw) ? raw.padStart(3,'0') : raw;
 };
+const getLegendDetailUrl = legend => {
+  const number = String(legend?.legend_no || '').padStart(3, '0');
+  return number === '001' && /四万十|青のり/.test(`${legend?.place || ''}${legend?.title || ''}`)
+    ? './legends/001-shimanto-aonori/'
+    : '';
+};
 const legendCardHtml = legend => {
   const progressId = `legend-new-${getLegendProgressId(legend)}`;
   return `<article class="legend-card paper discoverable-card" data-discover-card data-discover-legend="${escapeHtml(progressId)}" data-discover-area="${escapeHtml(legend.area || '')}"><div class="legend-visual">${legend.image_url ? `<img src="${escapeHtml(legend.image_url)}" alt="${escapeHtml(legend.title)}">` : `<b>${escapeHtml(legend.category?.slice(0,1) || '伝')}</b>`}<span>LEGEND<br>No.${escapeHtml(legend.legend_no || '---')}</span></div><div class="legend-content"><div class="meta"><span>${escapeHtml(legend.category)}</span><span>📍 ${escapeHtml(legend.place)}</span></div><h3>${escapeHtml(legend.title)}</h3><p>${escapeHtml(legend.summary)}</p><span class="discovery-status" hidden>発見済み ✓</span><button type="button" class="discover-action" data-discover-action data-default-label="▶ この伝説を開く">▶ この伝説を開く</button></div></article>`;
@@ -400,7 +411,10 @@ function applyHomeSettings(settings, publishedLegends) {
   if (today) {
     const progressId = getLegendProgressId(today);
     const discoveryAttributes = `data-discover-legend="${escapeHtml(progressId)}" data-discover-area="${escapeHtml(today.area || '')}"`;
-    const readControl = `<button id="read-legend" type="button" data-discover-action data-default-label="▶ この伝説を開く" ${discoveryAttributes}>▶ この伝説を開く</button>`;
+    const detailUrl = getLegendDetailUrl(today);
+    const readControl = detailUrl
+      ? `<a id="read-legend" class="legend-page-link" href="${detailUrl}" data-discover-action data-default-label="▶ この伝説を開く" ${discoveryAttributes}>▶ この伝説を開く</a>`
+      : `<button id="read-legend" type="button" data-discover-action data-default-label="▶ この伝説を開く" ${discoveryAttributes}>▶ この伝説を開く</button>`;
     document.querySelector('#today-feature-card').innerHTML = `<div class="feature-art" role="img" aria-label="${escapeHtml(today.title)}">${today.image_url ? `<img src="${escapeHtml(today.image_url)}" alt="">` : `<span>${escapeHtml(today.place)}</span>`}<b>${escapeHtml(today.legend_no || '---')}</b></div><div class="feature-body"><div class="meta"><span>${escapeHtml(today.category)}</span><span>📍 ${escapeHtml(today.place)}</span></div><h3>${escapeHtml(today.title)}</h3><p>${escapeHtml(today.summary)}</p><span class="today-discovery-status" hidden>発見済み ✓</span>${readControl}</div>`;
     updateDiscoveredControls();
   }
