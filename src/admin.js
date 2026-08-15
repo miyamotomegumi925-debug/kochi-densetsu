@@ -24,6 +24,22 @@ function showLegendImagePreview(imageUrl, message = '') {
   text.textContent = imageUrl ? message : '';
 }
 
+async function persistLegendImage(legendId, imageUrl, token) {
+  if (!legendId || !imageUrl) return;
+  const updated = await dbUpdate('legends', legendId, {
+    image_url:imageUrl,
+    updated_at:new Date().toISOString()
+  }, token);
+  if (updated?.[0]?.image_url !== imageUrl) throw new Error('図鑑へ画像URLを保存できませんでした');
+}
+
+function submissionImageSyncControl(submission) {
+  if (!submission.promoted_legend_id || !submission.image_url) return '';
+  const linkedLegend = legends.find(legend => legend.id === submission.promoted_legend_id);
+  if (linkedLegend?.image_url === submission.image_url) return '<span class="published-note">✓ 写真引継ぎ済み</span>';
+  return `<button data-action="sync-image" data-id="${submission.id}">写真を図鑑へ再反映</button>`;
+}
+
 async function ensureSession() {
   if (!session?.access_token) throw new Error('ログインが必要です');
   const expiresSoon = !session.expires_at || session.expires_at * 1000 < Date.now() + 60000;
@@ -68,7 +84,7 @@ async function loadDashboard() {
 function renderSubmissions() {
   const filter = $('#submission-filter').value;
   const rows = filter === 'all' ? submissions : submissions.filter(x => x.status === filter);
-  $('#admin-submissions').innerHTML = rows.length ? rows.map(x => `<article class="admin-card submission-card ${x.status === 'approved' ? 'is-published' : ''}">${x.image_url ? `<img class="admin-submission-image" src="${esc(x.image_url)}" alt="">` : ''}<div class="admin-card-head"><span class="status ${x.status}">${x.status === 'approved' ? '● 公開中' : x.status === 'pending' ? '未確認' : '非公開'}</span><time>${new Date(x.created_at).toLocaleString('ja-JP')}</time></div><h3>${esc(x.legend)}</h3><p>📍 ${esc(x.place)} ／ BY ${esc(x.author || '名もなき冒険者')}</p><dl><dt>なぜ伝説？</dt><dd>${esc(x.why)}</dd><dt>会いかた</dt><dd>${esc(x.access)}</dd></dl>${x.youtube ? `<a href="${esc(x.youtube)}" target="_blank" rel="noopener">YouTube ↗</a>` : ''}<div class="admin-actions">${x.promoted_legend_id ? '<span class="promoted-note">★ 図鑑へ移行済み</span>' : `<button data-action="promote" data-id="${x.id}">図鑑へ移行</button>`}${x.status === 'approved' ? '<span class="published-note">✓ 公開中</span>' : `<button data-action="approved" data-id="${x.id}">公開する</button>`}<button data-action="rejected" data-id="${x.id}" ${x.status === 'rejected' ? 'disabled' : ''}>非公開</button><button data-action="delete" data-id="${x.id}" class="danger">削除</button></div></article>`).join('') : '<p class="admin-empty">対象の投稿はありません。</p>';
+  $('#admin-submissions').innerHTML = rows.length ? rows.map(x => `<article class="admin-card submission-card ${x.status === 'approved' ? 'is-published' : ''}">${x.image_url ? `<img class="admin-submission-image" src="${esc(x.image_url)}" alt="">` : ''}<div class="admin-card-head"><span class="status ${x.status}">${x.status === 'approved' ? '● 公開中' : x.status === 'pending' ? '未確認' : '非公開'}</span><time>${new Date(x.created_at).toLocaleString('ja-JP')}</time></div><h3>${esc(x.legend)}</h3><p>📍 ${esc(x.place)} ／ BY ${esc(x.author || '名もなき冒険者')}</p><dl><dt>なぜ伝説？</dt><dd>${esc(x.why)}</dd><dt>会いかた</dt><dd>${esc(x.access)}</dd></dl>${x.youtube ? `<a href="${esc(x.youtube)}" target="_blank" rel="noopener">YouTube ↗</a>` : ''}<div class="admin-actions">${x.promoted_legend_id ? '<span class="promoted-note">★ 図鑑へ移行済み</span>' : `<button data-action="promote" data-id="${x.id}">図鑑へ移行</button>`}${submissionImageSyncControl(x)}${x.status === 'approved' ? '<span class="published-note">✓ 公開中</span>' : `<button data-action="approved" data-id="${x.id}">公開する</button>`}<button data-action="rejected" data-id="${x.id}" ${x.status === 'rejected' ? 'disabled' : ''}>非公開</button><button data-action="delete" data-id="${x.id}" class="danger">削除</button></div></article>`).join('') : '<p class="admin-empty">対象の投稿はありません。</p>';
 }
 
 function renderSettings() {
@@ -129,6 +145,19 @@ function activateTab(name) {
 document.querySelectorAll('[data-tab]').forEach(button => button.onclick = () => activateTab(button.dataset.tab));
 $('#admin-submissions').onclick = async event => {
   const button = event.target.closest('[data-action]'); if (!button) return;
+  if (button.dataset.action === 'sync-image') {
+    const source = submissions.find(item => item.id === button.dataset.id);
+    if (!source?.promoted_legend_id || !source.image_url) return;
+    button.disabled = true;
+    try {
+      await withSession(token => persistLegendImage(source.promoted_legend_id, source.image_url, token));
+      await loadDashboard();
+    } catch (error) {
+      alert(`画像を再反映できませんでした: ${error.message}`);
+      button.disabled = false;
+    }
+    return;
+  }
   if (button.dataset.action === 'promote') {
     const source = submissions.find(item => item.id === button.dataset.id);
     if (!source || source.promoted_legend_id) return;
@@ -183,7 +212,7 @@ $('#legend-form').onsubmit = async event => {
             updated_at:new Date().toISOString()
           }, token),
           inheritedExistingImage
-            ? dbUpdate('legends', existing.id, { image_url:promotionSource.image_url, updated_at:new Date().toISOString() }, token)
+            ? persistLegendImage(existing.id, promotionSource.image_url, token)
             : Promise.resolve()
         ]));
         form.reset();
@@ -220,6 +249,9 @@ $('#legend-form').onsubmit = async event => {
         await dbUpdate('legends', editingLegend.id, { ...data, updated_at:new Date().toISOString() }, token);
       } else {
         const inserted = await dbInsertReturning('legends', data, token);
+        if (inserted?.[0]?.id && data.image_url) {
+          await persistLegendImage(inserted[0].id, data.image_url, token);
+        }
         if (promotionSource && inserted?.[0]?.id) {
           await dbUpdate('submissions', promotionSource.id, {
             promoted_legend_id:inserted[0].id,
