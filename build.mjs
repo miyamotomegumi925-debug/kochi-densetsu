@@ -1,0 +1,17 @@
+import { cp, mkdir, copyFile, rm, writeFile } from 'node:fs/promises';
+await rm('dist', { recursive: true, force: true });
+await rm('github-pages', { recursive: true, force: true });
+await mkdir('dist/client/src', { recursive: true });
+await mkdir('dist/server', { recursive: true });
+await mkdir('dist/.openai', { recursive: true });
+await copyFile('index.html', 'dist/client/index.html');
+await copyFile('admin.html', 'dist/client/admin.html');
+await cp('legends', 'dist/client/legends', { recursive: true });
+await copyFile('sitemap.xml', 'dist/client/sitemap.xml');
+await cp('src', 'dist/client/src', { recursive: true });
+await copyFile('server/index.js', 'dist/server/index.js');
+await copyFile('.openai/hosting.json', 'dist/.openai/hosting.json');
+await cp('public', 'dist/client', { recursive: true });
+await cp('dist/client', 'github-pages', { recursive: true });
+await writeFile('github-pages/.nojekyll', '');
+console.log('Static site built to dist/');
