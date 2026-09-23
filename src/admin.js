@@ -2,7 +2,33 @@ import { dbSelect, dbInsert, dbInsertReturning, dbUpdate, dbDelete, signInAdmin,
 
 const $ = selector => document.querySelector(selector);
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let session = JSON.parse(sessionStorage.getItem('kochi-admin-session') || 'null');
+
+function loadStoredAdminSession() {
+  try {
+    const stored = sessionStorage.getItem('kochi-admin-session');
+    if (!stored) return null;
+    const parsed = JSON.parse(stored);
+    if (!parsed || typeof parsed !== 'object' || !parsed.access_token) {
+      sessionStorage.removeItem('kochi-admin-session');
+      return null;
+    }
+    return parsed;
+  } catch {
+    sessionStorage.removeItem('kochi-admin-session');
+    return null;
+  }
+}
+
+function adminLoginErrorMessage(error) {
+  const message = String(error?.message || '');
+  if (/invalid login credentials/i.test(message)) return 'メールアドレスまたはパスワードが一致しません。';
+  if (/email not confirmed/i.test(message)) return 'メールアドレスの確認が完了していません。確認メールをご確認ください。';
+  if (/user.*(disabled|banned)|account.*disabled/i.test(message)) return 'この管理者アカウントは現在利用できません。';
+  if (/failed to fetch|network|load failed/i.test(message)) return '認証サーバーへ接続できませんでした。通信環境を確認して、もう一度お試しください。';
+  return 'ログインできませんでした。時間をおいて、もう一度お試しください。';
+}
+
+let session = loadStoredAdminSession();
 let submissions = [];
 let legends = [];
 let settings = {};
@@ -159,6 +185,7 @@ function renderLegends() {
 
 async function authenticate(email, password) {
   const result = await signInAdmin(email, password);
+  if (!result?.access_token) throw new Error('認証セッションを取得できませんでした');
   session = result;
   sessionStorage.setItem('kochi-admin-session', JSON.stringify(session));
   $('#login-panel').hidden = true;
@@ -175,10 +202,21 @@ function logout() {
 
 $('#admin-login').onsubmit = async event => {
   event.preventDefault();
+  const form = event.currentTarget;
   const data = new FormData(event.currentTarget);
+  const submit = form.querySelector('button[type="submit"], button:not([type])');
   $('#login-error').textContent = '';
-  try { await authenticate(data.get('email'), data.get('password')); }
-  catch { $('#login-error').textContent = 'ログインできません。管理者のメールアドレスとパスワードを確認してください。'; }
+  submit.disabled = true;
+  submit.textContent = 'ログイン中…';
+  try {
+    await authenticate(data.get('email'), data.get('password'));
+  } catch (error) {
+    console.error('Admin sign-in failed:', error);
+    $('#login-error').textContent = adminLoginErrorMessage(error);
+  } finally {
+    submit.disabled = false;
+    submit.textContent = 'ログイン';
+  }
 };
 $('#logout').onclick = logout;
 $('#submission-filter').onchange = renderSubmissions;
